@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SUPERVISA·PE</title>
+<meta name="description" content="Checklist de supervisión en campo de proyectos de inversión del Estado peruano. Funciona sin internet.">
+<meta name="theme-color" content="#A8401A">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icono.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icono-192.png">
+<style>
+/* ===== Paleta cálida (modo claro por defecto) ===== */
+:root{
+  --bg:#FBF6EE; --surface:#FFFFFF; --surface2:#F4EADB; --text:#2B1D14; --muted:#6B5444;
+  --primary:#A8401A; --primary-ink:#FFFFFF; --accent:#C98A12; --border:#D9C7AE;
+  --ok:#2E7D32; --warn:#9A5B00; --bad:#B3261E; --ok-bg:#E6F2E6; --warn-bg:#FFF1D6; --bad-bg:#FBE3E1;
+  --focus:#1F5FBF; --fs:18px; --radius:12px; --shadow:0 1px 3px rgba(60,30,10,.12);
+}
+:root[data-theme="oscuro"]{
+  --bg:#1C1410; --surface:#2A1F18; --surface2:#35281F; --text:#F6EBDD; --muted:#CDB8A2;
+  --primary:#F0A060; --primary-ink:#1C1410; --accent:#E8B04A; --border:#5A4636;
+  --ok:#7CCB80; --warn:#F2C062; --bad:#FF8A80; --ok-bg:#1F3320; --warn-bg:#3D2E10; --bad-bg:#3F1C1A;
+  --focus:#8AB4FF; --shadow:0 1px 3px rgba(0,0,0,.5);
+}
+:root[data-theme="sol"]{ /* máximo contraste para pleno sol */
+  --bg:#FFFFFF; --surface:#FFFFFF; --surface2:#FFF4E0; --text:#000000; --muted:#2B1D14;
+  --primary:#7A2600; --primary-ink:#FFFFFF; --accent:#7A4A00; --border:#000000;
+  --ok:#0B5D12; --warn:#6B3D00; --bad:#8E0B03; --ok-bg:#DDF3DD; --warn-bg:#FFE9B8; --bad-bg:#FFD6D2;
+  --focus:#0033CC; --shadow:none;
+}
+*{box-sizing:border-box}
+html{font-size:var(--fs)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",Roboto,Arial,sans-serif;line-height:1.45;-webkit-text-size-adjust:100%}
+:root[data-theme="sol"] body{font-weight:500}
+a{color:var(--primary)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+header.top{position:sticky;top:0;z-index:20;background:var(--primary);color:var(--primary-ink);padding:.5rem .8rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+header.top h1{font-size:1.1rem;margin:0;flex:1;min-width:10rem;letter-spacing:.02em}
+header.top small{display:block;font-weight:400;opacity:.9;font-size:.72rem}
+.tbtn{background:transparent;border:2px solid currentColor;color:inherit;border-radius:10px;min-height:44px;min-width:44px;padding:0 .6rem;cursor:pointer;font-weight:700}
+nav.tabs{display:flex;gap:.3rem;overflow-x:auto;background:var(--surface2);padding:.4rem .5rem;border-bottom:1px solid var(--border)}
+nav.tabs button{flex:0 0 auto;border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:.45rem .9rem;min-height:44px;cursor:pointer;font-weight:600}
+nav.tabs button[aria-current="page"]{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+main{max-width:980px;margin:0 auto;padding:.8rem .8rem 6rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem;margin:.7rem 0;box-shadow:var(--shadow)}
+.card h2,.card h3{margin:.1rem 0 .5rem;font-size:1.05rem}
+.row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+.grow{flex:1 1 14rem}
+label.f{display:block;font-weight:600;margin:.55rem 0 .2rem;font-size:.9rem}
+input[type=text],input[type=number],input[type=search],input[type=password],input[type=url],select,textarea{width:100%;padding:.6rem .7rem;border:1.5px solid var(--border);border-radius:10px;background:var(--surface);min-height:46px}
+textarea{min-height:5rem;resize:vertical}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;min-height:48px;padding:.5rem 1rem;border-radius:10px;border:1.5px solid var(--primary);background:var(--primary);color:var(--primary-ink);font-weight:700;cursor:pointer;text-decoration:none}
+.btn.sec{background:var(--surface);color:var(--primary)}
+.btn.ghost{background:transparent;border-color:var(--border);color:var(--text)}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.muted{color:var(--muted);font-size:.88rem}
+.pill{display:inline-block;padding:.15rem .6rem;border-radius:999px;font-size:.8rem;font-weight:700;border:1px solid transparent}
+.s-ok{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}
+.s-warn{background:var(--warn-bg);color:var(--warn);border-color:var(--warn)}
+.s-bad{background:var(--bad-bg);color:var(--bad);border-color:var(--bad)}
+.s-none{background:var(--surface2);color:var(--muted);border-color:var(--border)}
+.proj{cursor:pointer}
+.proj:hover{border-color:var(--primary)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.6rem}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.6rem .8rem;cursor:pointer}
+.kpi b{display:block;font-size:1.5rem}
+.kpi[aria-pressed="true"]{outline:3px solid var(--primary)}
+details.sec{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin:.6rem 0}
+details.sec>summary{cursor:pointer;padding:.8rem;font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:.5rem}
+details.sec>summary::-webkit-details-marker{display:none}
+.q{border-top:1px solid var(--border);padding:.75rem .8rem}
+.q .t{font-weight:600}
+.q .meta{font-size:.78rem;color:var(--muted)}
+.ans{display:flex;gap:.4rem;margin:.5rem 0;flex-wrap:wrap}
+.ans button{flex:1 1 5.5rem;min-height:52px;border-radius:10px;border:2px solid var(--border);background:var(--surface);font-weight:800;cursor:pointer}
+.ans button[aria-pressed="true"].si{background:var(--ok);border-color:var(--ok);color:#fff}
+.ans button[aria-pressed="true"].no{background:var(--bad);border-color:var(--bad);color:#fff}
+.ans button[aria-pressed="true"].na{background:var(--muted);border-color:var(--muted);color:var(--bg)}
+.thumbs{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.4rem}
+.thumbs img{width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--border)}
+.bar{height:12px;background:var(--surface2);border-radius:999px;overflow:hidden;border:1px solid var(--border)}
+.bar>i{display:block;height:100%;background:var(--primary)}
+.sticky-foot{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:2px solid var(--border);padding:.5rem .8rem calc(.5rem + env(safe-area-inset-bottom));display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;z-index:15}
+table.t{width:100%;border-collapse:collapse;font-size:.85rem}
+table.t th,table.t td{border-bottom:1px solid var(--border);padding:.4rem;text-align:left;vertical-align:top}
+table.t th{background:var(--surface2)}
+.scroll{overflow-x:auto}
+.toast{position:fixed;left:50%;bottom:5.5rem;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:.7rem 1rem;border-radius:10px;z-index:50;max-width:90vw;font-weight:600}
+dialog{border:2px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);max-width:min(560px,94vw);width:100%}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+#mapa{height:360px;border-radius:var(--radius);border:1px solid var(--border)}
+.hide{display:none!important}
+.lock{border-left:6px solid var(--ok)}
+.draft{border-left:6px solid var(--accent)}
+#print{display:none}
+@media print{
+  body *{visibility:hidden} #print,#print *{visibility:visible}
+  #print{display:block;position:absolute;left:0;top:0;width:100%;color:#000;background:#fff;font-size:11pt}
+  #print table{width:100%;border-collapse:collapse} #print td,#print th{border:1px solid #999;padding:3px 5px;font-size:9.5pt;vertical-align:top}
+  #print img{width:150px;height:110px;object-fit:cover;margin:2px}
+  #print h1{font-size:15pt;margin:0 0 4px} #print h2{font-size:12pt;margin:10px 0 4px;background:#F4EADB;padding:3px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>SUPERVISA·PE<small>Checklist de supervisión de proyectos del Estado · funciona sin internet</small></h1>
+  <button class="tbtn hide" id="bInstalar" title="Instalar en este equipo">⤓ Instalar</button>
+  <span id="net" class="pill s-none" title="Estado de conexión">…</span>
+  <button id="sync" class="pill s-none" style="cursor:pointer;min-height:36px" title="Sincronizar con la base central">☁ …</button>
+  <button class="tbtn" id="bTema" title="Cambiar modo: claro / oscuro / sol" aria-label="Cambiar modo de color">☀︎</button>
+  <button class="tbtn" id="bMenos" title="Letra más pequeña" aria-label="Letra más pequeña">A−</button>
+  <button class="tbtn" id="bMas" title="Letra más grande" aria-label="Letra más grande">A+</button>
+</header>
+<nav class="tabs" id="tabs" aria-label="Secciones">
+  <button data-v="proyectos">Proyectos</button>
+  <button data-v="visita">Visita</button>
+  <button data-v="plantillas">Plantillas</button>
+  <button data-v="datos">Datos y sincronía</button>
+  <button data-v="auditoria">Auditoría</button>
+  <button data-v="cuenta">Cuenta</button>
+  <button data-v="ayuda">Ayuda</button>
+</nav>
+<main id="app" aria-live="polite"></main>
+<div id="foot" class="sticky-foot hide"></div>
+<div id="print"></div>
+<dialog id="dlg"><div id="dlgBody"></div></dialog>
+
+<script>
+"use strict";
+/* =====================================================================
+   SUPERVISA·PE  v0.3.1  ·  Archivo único, sin servidor, costo cero
+   Datos: IndexedDB del navegador (en el equipo). Sincronía: paquetes .json
+   Fecha/hora: UTC-5 (Lima)  ·  Coordenadas: WGS84, 6 decimales
+   ===================================================================== */
+const APP = { nombre:"SUPERVISA·PE", version:"0.3.1", esquema:1 };
+
+/* ---------- utilidades ---------- */
+const $ = (s,el=document)=>el.querySelector(s);
+const $$ = (s,el=document)=>[...el.querySelectorAll(s)];
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const p2 = n => String(n).padStart(2,"0");
+function isoLima(d=new Date()){ const t=new Date(d.getTime()-5*3600e3); return t.toISOString().replace("Z","-05:00"); }
+function fmtFecha(iso){ if(!iso) return ""; const d=new Date(iso); if(isNaN(d)) return iso; const t=new Date(d.getTime()-5*3600e3);
+  return `${p2(t.getUTCDate())}/${p2(t.getUTCMonth()+1)}/${t.getUTCFullYear()} ${p2(t.getUTCHours())}:${p2(t.getUTCMinutes())}:${p2(t.getUTCSeconds())}`; }
+function fmtDia(iso){ return fmtFecha(iso).slice(0,10); }
+function stamp(){ const t=new Date(Date.now()-5*3600e3); return `${t.getUTCFullYear()}${p2(t.getUTCMonth()+1)}${p2(t.getUTCDate())}_${p2(t.getUTCHours())}${p2(t.getUTCMinutes())}${p2(t.getUTCSeconds())}`; }
+function uuid(){ if(crypto.randomUUID) return crypto.randomUUID(); const b=crypto.getRandomValues(new Uint8Array(16)); b[6]=(b[6]&15)|64; b[8]=(b[8]&63)|128; const h=[...b].map(x=>x.toString(16).padStart(2,"0")).join(""); return `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20)}`; }
+const c6 = v => (v===null||v===undefined||v==="")?"":Number(v).toFixed(6);
+function toast(m,ms=2600){ const d=document.createElement("div"); d.className="toast"; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),ms); }
+function descargar(nombre, contenido, tipo="application/json"){ const b=contenido instanceof Blob?contenido:new Blob([contenido],{type:tipo}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=nombre; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500); }
+function leerArchivo(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>rej(r.error); r.readAsText(file,"utf-8"); }); }
+function elegirArchivo(accept){ return new Promise(res=>{ const i=document.createElement("input"); i.type="file"; i.accept=accept; i.onchange=()=>res(i.files[0]||null); i.click(); }); }
+
+/* ---------- SHA-256 (nativo o respaldo en JS) ---------- */
+async function sha256(txt){
+  const data=new TextEncoder().encode(txt);
+  if(window.crypto && crypto.subtle){ try{ const h=await crypto.subtle.digest("SHA-256",data); return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,"0")).join(""); }catch(e){} }
+  return sha256js(data);
+}
+function sha256js(bytes){
+  const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  let H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const l=bytes.length, n=((l+9+63)>>6)<<6, m=new Uint8Array(n); m.set(bytes); m[l]=0x80;
+  const bits=l*8; const dv=new DataView(m.buffer); dv.setUint32(n-4,bits>>>0); dv.setUint32(n-8,Math.floor(bits/4294967296));
+  const W=new Uint32Array(64); const r=(x,y)=>(x>>>y)|(x<<(32-y));
+  for(let i=0;i<n;i+=64){ for(let t=0;t<16;t++) W[t]=dv.getUint32(i+t*4);
+    for(let t=16;t<64;t++){ const s0=r(W[t-15],7)^r(W[t-15],18)^(W[t-15]>>>3), s1=r(W[t-2],17)^r(W[t-2],19)^(W[t-2]>>>10); W[t]=(W[t-16]+s0+W[t-7]+s1)>>>0; }
+    let [a,b,c,d,e,f,g,h]=H;
+    for(let t=0;t<64;t++){ const S1=r(e,6)^r(e,11)^r(e,25), ch=(e&f)^(~e&g), t1=(h+S1+ch+K[t]+W[t])>>>0, S0=r(a,2)^r(a,13)^r(a,22), mj=(a&b)^(a&c)^(b&c), t2=(S0+mj)>>>0;
+      h=g; g=f; f=e; e=(d+t1)>>>0; d=c; c=b; b=a; a=(t1+t2)>>>0; }
+    H=[H[0]+a,H[1]+b,H[2]+c,H[3]+d,H[4]+e,H[5]+f,H[6]+g,H[7]+h].map(x=>x>>>0); }
+  return H.map(x=>x.toString(16).padStart(8,"0")).join("");
+}
+function canon(o){ if(Array.isArray(o)) return "["+o.map(canon).join(",")+"]"; if(o&&typeof o==="object") return "{"+Object.keys(o).sort().map(k=>JSON.stringify(k)+":"+canon(o[k])).join(",")+"}"; return JSON.stringify(o); }
+
+/* ---------- Base de datos local (IndexedDB) ---------- */
+const STORES={proyectos:"uuid",visitas:"uuid",fotos:"uuid",plantillas:"id",bitacora:"id",config:"k"};
+const DB={ db:null, mem:null,
+  open(){ return new Promise(res=>{ try{ const r=indexedDB.open("supervisa_pe",1);
+      r.onupgradeneeded=()=>{ const db=r.result; for(const [s,k] of Object.entries(STORES)) if(!db.objectStoreNames.contains(s)) db.createObjectStore(s,{keyPath:k}); };
+      r.onsuccess=()=>{ DB.db=r.result; res(true); };
+      r.onerror=()=>{ DB.mem={}; for(const s in STORES) DB.mem[s]=new Map(); res(false); };
+    }catch(e){ DB.mem={}; for(const s in STORES) DB.mem[s]=new Map(); res(false); } }); },
+  _st(s,m){ return DB.db.transaction(s,m).objectStore(s); },
+  all(s){ if(DB.mem) return Promise.resolve([...DB.mem[s].values()]); return new Promise((res,rej)=>{ const q=DB._st(s,"readonly").getAll(); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); }); },
+  get(s,k){ if(DB.mem) return Promise.resolve(DB.mem[s].get(k)); return new Promise((res,rej)=>{ const q=DB._st(s,"readonly").get(k); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); }); },
+  put(s,v){ if(DB.mem){ DB.mem[s].set(v[STORES[s]],v); return Promise.resolve(); } return new Promise((res,rej)=>{ const q=DB._st(s,"readwrite").put(v); q.onsuccess=()=>res(); q.onerror=()=>rej(q.error); }); }
+};
+let CFG={};
+async function cfgGet(){ const all=await DB.all("config"); CFG={}; all.forEach(r=>CFG[r.k]=r.v); }
+async function cfgSet(k,v){ CFG[k]=v; await DB.put("config",{k,v}); }
+async function log(accion,entidad,id,detalle=""){ await DB.put("bitacora",{id:uuid(),ts:isoLima(),usuario:CFG.usuario||"",dispositivo:CFG.dispositivo||"",accion,entidad,ref:id||"",detalle}); }
+function audNuevo(origen="captura_app"){ const t=isoLima(); return {creado_por:CFG.usuario||"",fecha_creacion:t,modificado_por:CFG.usuario||"",fecha_modificacion:t,estado_registro:"ACTIVO",sincronizado:false,origen_captura:origen,dispositivo:CFG.dispositivo||""}; }
+function audMod(o){ o.modificado_por=CFG.usuario||""; o.fecha_modificacion=isoLima(); o.sincronizado=false; if(typeof sincronizarPronto==="function") sincronizarPronto(); return o; }
+
+/* ---------- Plantillas base (homologadas: NÚCLEO + módulo por sector) ---------- */
+const q=(cod,texto,peso=2,critica=false,ayuda="")=>({cod,texto,tipo:"sino",peso,critica,ayuda});
+const PLANTILLAS_BASE=[
+ {id:"NUCLEO",nombre:"Núcleo común de supervisión de obra",version:"1.0",tipo:"nucleo",palabras:[],secciones:[
+  {titulo:"A. Documentación y gestión en obra",preguntas:[
+   q("NUC-A01","¿El cartel de obra está instalado y visible, con CUI, monto y plazo?",2),
+   q("NUC-A02","¿El cuaderno de obra está en obra y con anotaciones al día?",3,true),
+   q("NUC-A03","¿El expediente técnico aprobado está disponible en obra?",2),
+   q("NUC-A04","¿El residente de obra está presente durante la visita?",3,true),
+   q("NUC-A05","¿El supervisor o inspector de la entidad está designado e identificado?",2),
+   q("NUC-A06","¿El calendario de avance de obra vigente está disponible?",1)]},
+  {titulo:"B. Plazo y avance",preguntas:[
+   q("NUC-B01","¿La obra está en ejecución (no paralizada) al momento de la visita?",3,true),
+   q("NUC-B02","¿El avance físico observado es coherente con el avance programado?",3),
+   q("NUC-B03","¿Hay frentes de trabajo activos con personal y equipos acordes al calendario?",2),
+   q("NUC-B04","¿Las ampliaciones de plazo o adicionales (si existen) están registrados y sustentados?",1,false,"Marque N.A. si no hay ampliaciones ni adicionales.")]},
+  {titulo:"C. Calidad",preguntas:[
+   q("NUC-C01","¿Los materiales en obra cuentan con certificados de calidad?",2),
+   q("NUC-C02","¿Se realizan y registran pruebas de control de calidad (concreto, compactación, etc.)?",3,true),
+   q("NUC-C03","¿Los trabajos ejecutados coinciden con planos y especificaciones técnicas?",3,true),
+   q("NUC-C04","¿Los trabajos ejecutados están libres de defectos visibles (fisuras, asentamientos, filtraciones)?",2)]},
+  {titulo:"D. Seguridad y salud en el trabajo",preguntas:[
+   q("NUC-D01","¿El personal usa equipo de protección personal completo?",2),
+   q("NUC-D02","¿La obra tiene cerco perimétrico y señalización de seguridad?",2),
+   q("NUC-D03","¿Existe plan de seguridad y salud en el trabajo vigente en obra?",2),
+   q("NUC-D04","¿Hay botiquín y procedimiento de respuesta a emergencias?",1)]},
+  {titulo:"E. Ambiental y social",preguntas:[
+   q("NUC-E01","¿Los residuos y el desmonte se manejan y disponen adecuadamente?",2),
+   q("NUC-E02","¿Se aplican medidas para no afectar a vecinos, accesos y servicios (polvo, ruido, desvíos)?",1),
+   q("NUC-E03","¿Existe un canal de atención de quejas y la población está informada?",1)]},
+  {titulo:"F. Ubicación y meta",preguntas:[
+   q("NUC-F01","¿La ubicación verificada en campo coincide con la registrada en el proyecto?",2,true),
+   q("NUC-F02","¿Lo que se construye coincide con la meta del proyecto declarado viable?",3,true)]}
+ ]},
+ {id:"SAN",nombre:"Módulo Saneamiento (agua y desagüe)",version:"1.0",tipo:"modulo",palabras:["SANEAMIENTO"],secciones:[{titulo:"G. Saneamiento",preguntas:[
+   q("SAN-01","¿Las tuberías instaladas son del diámetro y clase especificados?",3),
+   q("SAN-02","¿Se realizaron y registraron pruebas hidráulicas de las redes?",3,true),
+   q("SAN-03","¿Las zanjas tienen profundidad, cama de apoyo y relleno compactado según especificación?",2),
+   q("SAN-04","¿Los reservorios y estructuras de concreto están libres de filtraciones?",3),
+   q("SAN-05","¿Las conexiones domiciliarias se ejecutan conforme al padrón de beneficiarios?",2),
+   q("SAN-06","¿El sistema de tratamiento o desinfección (cloración, PTAR) se ejecuta según diseño?",2),
+   q("SAN-07","¿La fuente de agua cuenta con licencia o autorización de uso vigente?",2,true),
+   q("SAN-08","¿Está prevista la entrega a la operadora (EPS, JASS o municipalidad)?",1)]}]},
+ {id:"EDU",nombre:"Módulo Educación",version:"1.0",tipo:"modulo",palabras:["EDUCACION","EDUCACIÓN"],secciones:[{titulo:"G. Educación",preguntas:[
+   q("EDU-01","¿Las aulas cumplen dimensiones, iluminación y ventilación del expediente?",2),
+   q("EDU-02","¿Columnas, vigas y losas de concreto armado están conformes a planos?",3,true),
+   q("EDU-03","¿Los servicios higiénicos son suficientes y operativos según diseño?",2),
+   q("EDU-04","¿Existen rampas y accesos para personas con discapacidad?",2),
+   q("EDU-05","¿Las instalaciones eléctricas tienen tablero con protecciones y puesta a tierra?",3,true),
+   q("EDU-06","¿Hay rutas de evacuación y señalización de seguridad?",2),
+   q("EDU-07","¿El mobiliario y equipamiento previstos están adquiridos o programados?",1),
+   q("EDU-08","¿Se garantiza la continuidad del servicio educativo durante la obra?",2)]}]},
+ {id:"SAL",nombre:"Módulo Salud",version:"1.0",tipo:"modulo",palabras:["SALUD"],secciones:[{titulo:"G. Salud",preguntas:[
+   q("SAL-01","¿Los ambientes respetan la distribución y flujos (limpio/sucio) del diseño?",3),
+   q("SAL-02","¿Las instalaciones de gases medicinales (si aplican) cumplen especificaciones?",2),
+   q("SAL-03","¿Existe grupo electrógeno y sistema eléctrico de respaldo según diseño?",2),
+   q("SAL-04","¿Se cuenta con sistema de manejo de residuos biocontaminados?",2),
+   q("SAL-05","¿La estructura cumple el diseño sismorresistente de edificación esencial?",3,true),
+   q("SAL-06","¿El equipamiento biomédico está adquirido o en proceso según cronograma?",2),
+   q("SAL-07","¿Hay accesibilidad para pacientes (rampas, ascensor, circulación de camillas)?",2)]}]},
+ {id:"TRA",nombre:"Módulo Transporte (vías)",version:"1.0",tipo:"modulo",palabras:["TRANSPORTE"],secciones:[{titulo:"G. Transporte",preguntas:[
+   q("TRA-01","¿El ancho de calzada y bermas coincide con el expediente?",2),
+   q("TRA-02","¿Las capas de base y subbase tienen pruebas de compactación registradas?",3,true),
+   q("TRA-03","¿El espesor verificado de carpeta asfáltica o losa coincide con lo especificado?",3,true),
+   q("TRA-04","¿Las obras de drenaje (cunetas, alcantarillas) están ejecutadas y operativas?",3),
+   q("TRA-05","¿La señalización vertical y horizontal está colocada?",2),
+   q("TRA-06","¿Se mantiene el tránsito con desvíos seguros y señalizados?",2),
+   q("TRA-07","¿Los taludes están estabilizados y sin riesgo de deslizamiento?",2),
+   q("TRA-08","¿Las canteras y botaderos usados están autorizados?",1)]}]},
+ {id:"AGR",nombre:"Módulo Agrario y riego",version:"1.0",tipo:"modulo",palabras:["AGRARIO","AGROPECUARIA","RIEGO"],secciones:[{titulo:"G. Agrario y riego",preguntas:[
+   q("AGR-01","¿El canal o infraestructura de riego tiene la sección y pendiente del diseño?",3),
+   q("AGR-02","¿El revestimiento de concreto está libre de fisuras y filtraciones?",3,true),
+   q("AGR-03","¿Las obras de arte (tomas, compuertas, partidores) están ejecutadas y operativas?",2),
+   q("AGR-04","¿Existe licencia de uso de agua o acreditación de disponibilidad hídrica (ANA)?",2,true),
+   q("AGR-05","¿El padrón de usuarios beneficiarios está identificado y coincide con el proyecto?",2),
+   q("AGR-06","¿La organización de usuarios está preparada para operar y mantener la obra?",1),
+   q("AGR-07","¿La obra no ocupa predios de terceros sin autorización?",2)]}]},
+ {id:"ENE",nombre:"Módulo Energía (electrificación)",version:"1.0",tipo:"modulo",palabras:["ENERGIA","ENERGÍA"],secciones:[{titulo:"G. Energía",preguntas:[
+   q("ENE-01","¿Postes, conductores y estructuras corresponden a lo especificado?",2),
+   q("ENE-02","¿Se respetan las distancias mínimas de seguridad a viviendas y vías?",3,true),
+   q("ENE-03","¿Las puestas a tierra están instaladas y medidas (con registro)?",3,true),
+   q("ENE-04","¿Subestaciones y transformadores están instalados según diseño?",2),
+   q("ENE-05","¿Las conexiones domiciliarias y medidores coinciden con los beneficiarios?",2),
+   q("ENE-06","¿Existe acuerdo de transferencia a la concesionaria para su operación?",1),
+   q("ENE-07","¿La franja de servidumbre de la línea está libre y autorizada?",2)]}]},
+ {id:"VIV",nombre:"Módulo Vivienda y desarrollo urbano",version:"1.0",tipo:"modulo",palabras:["VIVIENDA","URBANO"],secciones:[{titulo:"G. Vivienda y urbano",preguntas:[
+   q("VIV-01","¿Pistas y veredas tienen espesores y pendientes según especificación?",3),
+   q("VIV-02","¿El drenaje pluvial está ejecutado y funciona?",2),
+   q("VIV-03","¿Se respetan alineamientos y retiros municipales?",2),
+   q("VIV-04","¿Las áreas verdes y el mobiliario urbano previstos se ejecutan?",1),
+   q("VIV-05","¿Hay accesibilidad universal (rampas en esquinas)?",2),
+   q("VIV-06","¿Las redes existentes (agua, luz) se protegieron sin cortes no programados?",2),
+   q("VIV-07","¿Los predios intervenidos tienen saneamiento físico-legal (titularidad)?",2,true)]}]},
+ {id:"GEN",nombre:"Módulo General (otros sectores)",version:"1.0",tipo:"modulo",palabras:[],secciones:[{titulo:"G. Componentes generales",preguntas:[
+   q("GEN-01","¿Los ambientes ejecutados corresponden al programa del expediente?",3),
+   q("GEN-02","¿Las instalaciones eléctricas y sanitarias están ejecutadas y probadas?",2),
+   q("GEN-03","¿El equipamiento previsto está adquirido o programado?",1),
+   q("GEN-04","¿Está definido quién operará y mantendrá la obra al terminar?",2),
+   q("GEN-05","¿El terreno tiene saneamiento físico-legal a nombre de la entidad?",2,true)]}]}
+];
+function moduloSugerido(funcion){ const f=(funcion||"").toUpperCase(); for(const p of PLANT_CACHE.filter(x=>x.tipo==="modulo")) if(p.palabras.some(w=>f.includes(w))) return p.id; return "GEN"; }
+
+/* ---------- Fuentes en línea (CONFIRMADAS el 11/11/2026) ---------- */
+const CEPLAN_WFS="https://geo.ceplan.gob.pe/geoserver/geoceplan/ows";
+const CEPLAN_CAPAS=[["42742","ip_prysectra","Transporte"],["42741","ip_pryenex","Energía"],["42740","ip_pryenerecminx","Energía y recursos minerales"],["42739","ip_prycomx","Comercio"],["42738","ip_pryindcomserx","Industria, comercio y servicios"],["42737","ip_pryturx","Turismo"],["42736","ip_pryvivdesurbx","Vivienda y desarrollo urbano"],["42735","ip_pryedux","Educación"],["42734","ip_pryeduculx","Educación y cultura"],["42733","ip_pryculdepx","Cultura y deporte"],["42732","ip_prysalx","Salud"],["42731","ip_prysalsanx","Salud y saneamiento"],["42730","ip_prysanx","Saneamiento"],["42729","ip_pryprosocx","Protección social"],["42728","ip_prysecamb","Ambiente"],["42727","ip_prysecagr","Agrario"],["42726","ip_prydefsegnacx","Defensa y seguridad nacional"],["42725","ip_pryordpubsegx","Orden público y seguridad"],["42724","ip_pryjusx","Justicia"],["42723","ip_pryadmplax","Administración y planeamiento"],["42722","ip_pryplagesresconx","Reserva de contingencia"]];
+const VISOR_GEOPERU="https://visor.geoperu.gob.pe/?layers=";
+const CONSULTA_INVERSIONES="https://www.gob.pe/917-consultar-las-inversiones-registradas-por-entidades-publicas";
+const WMS_INEI="https://geoespacial.inei.gob.pe/geoserver/Interoperabilidad/wms";
+
+/* ---------- estado ---------- */
+let PLANT_CACHE=[]; let VISTA="proyectos"; let PROY_SEL=null; let VISITA_SEL=null; let FILTRO="todos"; let AUDITOR=false;
+
+/* ---------- apariencia ---------- */
+function aplicarApariencia(){ document.documentElement.dataset.theme=CFG.tema||"claro"; document.documentElement.style.setProperty("--fs",(CFG.fs||18)+"px");
+  $("#bTema").textContent={claro:"☀︎",oscuro:"☾",sol:"◎"}[CFG.tema||"claro"]; $("#bTema").title="Modo actual: "+(CFG.tema||"claro")+" (clic para cambiar)"; }
+$("#bTema").onclick=async()=>{ const o=["claro","oscuro","sol"]; await cfgSet("tema",o[(o.indexOf(CFG.tema||"claro")+1)%3]); aplicarApariencia(); toast("Modo "+CFG.tema); };
+$("#bMas").onclick=async()=>{ await cfgSet("fs",Math.min(26,(CFG.fs||18)+1)); aplicarApariencia(); };
+$("#bMenos").onclick=async()=>{ await cfgSet("fs",Math.max(14,(CFG.fs||18)-1)); aplicarApariencia(); };
+function netEstado(){ const on=navigator.onLine; const n=$("#net"); n.textContent=on?"En línea":"Sin internet"; n.className="pill "+(on?"s-ok":"s-warn"); }
+addEventListener("online",netEstado); addEventListener("offline",netEstado);
+
+/* ---------- puntaje y semáforo ---------- */
+function preguntasDe(plantIds){ const out=[]; for(const id of plantIds){ const p=PLANT_CACHE.find(x=>x.id===id); if(!p) continue; for(const s of p.secciones) for(const pr of s.preguntas) out.push({...pr,seccion:s.titulo,plantilla:p.id}); } return out; }
+function calcular(v){ const prs=preguntasDe(v.plantillas||[]); let si=0,base=0,resp=0,crit=[];
+  for(const pr of prs){ const r=(v.respuestas||{})[pr.cod]; if(!r||!r.v) continue; resp++; if(r.v==="NA") continue; base+=pr.peso; if(r.v==="SI") si+=pr.peso; if(r.v==="NO"&&pr.critica) crit.push(pr.cod); }
+  const pct= base? Math.round(si*1000/base)/10 : null;
+  let sem="s-none",txt="Sin datos"; if(pct!==null){ if(crit.length||pct<60){sem="s-bad";txt="Crítico";} else if(pct<85){sem="s-warn";txt="Con observaciones";} else {sem="s-ok";txt="Conforme";} }
+  return {pct,resp,total:prs.length,crit,sem,txt}; }
+
+/* ---------- navegación ---------- */
+function ir(v){ VISTA=v; $$("#tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.v===v?"page":"false")); render(); scrollTo(0,0); }
+$$("#tabs button").forEach(b=>b.onclick=()=>ir(b.dataset.v));
+async function render(){ if(typeof pintarSync==="function") pintarSync(); const f=$("#foot"); f.classList.add("hide"); f.innerHTML="";
+  const m={proyectos:vProyectos,proyecto:vProyecto,visita:vVisita,plantillas:vPlantillas,datos:vDatos,auditoria:vAuditoria,cuenta:vCuenta,ayuda:vAyuda}; await (m[VISTA]||vProyectos)(); }
+
+/* ================= VISTA: PROYECTOS ================= */
+async function vProyectos(){
+  const ps=(await DB.all("proyectos")).filter(p=>p.estado_registro!=="BAJA"); const vs=await DB.all("visitas");
+  const fila=ps.map(p=>{ const mis=vs.filter(v=>v.proyecto_uuid===p.uuid&&v.estado_registro!=="BAJA").sort((a,b)=>a.fecha_creacion<b.fecha_creacion?1:-1); const ult=mis[0]; const c=ult?calcular(ult):{sem:"s-none",txt:"Sin visita",pct:null}; return {p,ult,c,n:mis.length}; });
+  const cuenta=k=>fila.filter(x=>x.c.sem===k).length;
+  const q=($("#buscar")||{}).value||"";
+  const vis=fila.filter(x=>(FILTRO==="todos"||x.c.sem===FILTRO)&&(`${x.p.cui} ${x.p.nombre} ${x.p.distrito} ${x.p.provincia} ${x.p.departamento} ${x.p.entidad}`.toLowerCase().includes(q.toLowerCase())));
+  $("#app").innerHTML=`
+  ${!CFG.usuario?`<div class="card" style="border-color:var(--warn)"><b>Primero registre su nombre</b> (queda en la auditoría de cada visita). <button class="btn" id="bUsr">Registrar supervisor</button></div>`:`<p class="muted">Supervisor: <b>${esc(CFG.usuario)}</b> ${CFG.cargo?"· "+esc(CFG.cargo):""} · <a href="#" id="bUsr">cambiar</a></p>`}
+  ${!sesion()?`<div class="card" style="border-color:var(--accent)"><b>Modo local.</b> Ingrese con su cuenta para enviar sus visitas a la base central. <button class="btn sec" id="bCta">Ingresar</button></div>`:""}
+  <div class="kpis" role="group" aria-label="Filtrar por semáforo">
+    ${[["todos","Proyectos",fila.length],["s-ok","Conformes",cuenta("s-ok")],["s-warn","Con observaciones",cuenta("s-warn")],["s-bad","Críticos",cuenta("s-bad")],["s-none","Sin visita",cuenta("s-none")]].map(([k,t,n])=>`<div class="kpi" tabindex="0" role="button" data-f="${k}" aria-pressed="${FILTRO===k}"><span class="muted">${t}</span><b>${n}</b></div>`).join("")}
+  </div>
+  <div class="row" style="margin-top:.7rem"><input type="search" id="buscar" class="grow" placeholder="Buscar por CUI, nombre, distrito, entidad…" value="${esc(q)}"><button class="btn" id="bNuevo">+ Nuevo proyecto</button></div>
+  ${vis.length?vis.map(x=>`<div class="card proj" data-u="${x.p.uuid}" tabindex="0">
+     <div class="row" style="justify-content:space-between"><b>${esc(x.p.nombre||"(sin nombre)")}</b><span class="pill ${x.c.sem}">${x.c.txt}${x.c.pct!==null?" · "+x.c.pct+"%":""}</span></div>
+     <div class="muted">CUI ${esc(x.p.cui||"—")} · ${esc(x.p.sector||"")} · ${esc([x.p.distrito,x.p.provincia,x.p.departamento].filter(Boolean).join(", "))}</div>
+     <div class="muted">${x.n} visita(s)${x.ult?" · última: "+fmtFecha(x.ult.fecha_creacion):""}</div></div>`).join(""):`<div class="card muted">No hay proyectos${FILTRO!=="todos"||q?" con ese filtro":""}. Use “+ Nuevo proyecto” o importe un paquete en “Datos y sincronía”.</div>`}`;
+  $("#bUsr")&&($("#bUsr").onclick=e=>{e.preventDefault();dlgUsuario();});
+  $("#bNuevo").onclick=()=>{ PROY_SEL=null; ir("proyecto"); }; $("#bCta")&&($("#bCta").onclick=()=>ir("cuenta"));
+  $("#buscar").oninput=()=>{ const pos=$("#buscar").selectionStart; vProyectos().then(()=>{ const b=$("#buscar"); b.focus(); b.setSelectionRange(pos,pos); }); };
+  $$(".kpi").forEach(k=>{ const fn=()=>{ FILTRO=(FILTRO===k.dataset.f?"todos":k.dataset.f); vProyectos(); }; k.onclick=fn; k.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")fn();}; });
+  $$(".proj").forEach(c=>{ const fn=()=>{ PROY_SEL=c.dataset.u; ir("proyecto"); }; c.onclick=fn; c.onkeydown=e=>{if(e.key==="Enter")fn();}; });
+}
+
+/* ================= VISTA: FICHA DEL PROYECTO ================= */
+async function vProyecto(){
+  const p= PROY_SEL? await DB.get("proyectos",PROY_SEL) : {uuid:uuid(),cui:"",nombre:"",entidad:"",sector:"",funcion:"",modulo:"GEN",departamento:"",provincia:"",distrito:"",ubigeo:"",lat:"",lon:"",monto:"",situacion:"",estado_inv:"",fuente_ficha:"manual",capas_geoperu:"43431",enlaces:[],notas:"",...audNuevo()};
+  const vs=(await DB.all("visitas")).filter(v=>v.proyecto_uuid===p.uuid&&v.estado_registro!=="BAJA").sort((a,b)=>a.fecha_creacion<b.fecha_creacion?1:-1);
+  const mods=PLANT_CACHE.filter(x=>x.tipo==="modulo");
+  const capas=String(p.capas_geoperu||"").split(/[,;\s]+/).filter(Boolean);
+  $("#app").innerHTML=`
+  <p><a href="#" id="volver">← Volver a proyectos</a></p>
+  <div class="card"><h2>${PROY_SEL?"Ficha del proyecto":"Nuevo proyecto"}</h2>
+   <div class="row"><div class="grow"><label class="f" for="cui">CUI (código único de inversión)</label><input type="text" id="cui" inputmode="numeric" value="${esc(p.cui)}"></div>
+   <div><label class="f">&nbsp;</label><button class="btn sec" id="bCeplan" title="Requiere internet">Autocompletar desde CEPLAN</button></div></div>
+   <div id="ceplanMsg" class="muted"></div>
+   <label class="f" for="nombre">Nombre del proyecto</label><textarea id="nombre" style="min-height:3rem">${esc(p.nombre)}</textarea>
+   <div class="row"><div class="grow"><label class="f" for="entidad">Entidad / unidad ejecutora</label><input type="text" id="entidad" value="${esc(p.entidad)}"></div>
+   <div class="grow"><label class="f" for="sector">Sector / función</label><input type="text" id="sector" value="${esc(p.sector||p.funcion)}"></div></div>
+   <label class="f" for="modulo">Checklist sectorial a aplicar (se suma al núcleo común)</label>
+   <select id="modulo">${mods.map(m=>`<option value="${m.id}" ${p.modulo===m.id?"selected":""}>${esc(m.nombre)} · v${esc(m.version)}</option>`).join("")}</select>
+   <div class="row"><div class="grow"><label class="f" for="departamento">Departamento</label><input type="text" id="departamento" value="${esc(p.departamento)}"></div>
+   <div class="grow"><label class="f" for="provincia">Provincia</label><input type="text" id="provincia" value="${esc(p.provincia)}"></div>
+   <div class="grow"><label class="f" for="distrito">Distrito</label><input type="text" id="distrito" value="${esc(p.distrito)}"></div>
+   <div style="flex:0 1 8rem"><label class="f" for="ubigeo">Ubigeo</label><input type="text" id="ubigeo" inputmode="numeric" value="${esc(p.ubigeo)}"></div></div>
+   <div class="row"><div class="grow"><label class="f" for="lat">Latitud (WGS84)</label><input type="text" id="lat" inputmode="decimal" value="${esc(c6(p.lat))}"></div>
+   <div class="grow"><label class="f" for="lon">Longitud (WGS84)</label><input type="text" id="lon" inputmode="decimal" value="${esc(c6(p.lon))}"></div>
+   <div><label class="f">&nbsp;</label><button class="btn sec" id="bGps">📍 Tomar GPS</button></div></div>
+   <div class="row"><div class="grow"><label class="f" for="monto">Monto viable / costo (S/)</label><input type="text" id="monto" inputmode="decimal" value="${esc(p.monto)}"></div>
+   <div class="grow"><label class="f" for="situacion">Situación / estado de la inversión</label><input type="text" id="situacion" value="${esc([p.situacion,p.estado_inv].filter(Boolean).join(" · "))}"></div></div>
+   <label class="f" for="capas">Capas de GEOPERÚ ligadas (id separados por coma)</label><input type="text" id="capas" value="${esc(capas.join(", "))}">
+   <div class="muted">Ejemplo: 42738 (CEPLAN industria, comercio y servicios), 43431 (Manzanas INEI 2025), 582 (Centros poblados INEI).</div>
+   <div class="row" style="margin-top:.4rem">${capas.map(id=>`<a class="btn ghost" target="_blank" rel="noopener" href="${VISOR_GEOPERU}${encodeURIComponent(id)}">Visor GEOPERÚ · capa ${esc(id)}</a>`).join("")}
+     <a class="btn ghost" target="_blank" rel="noopener" href="${CONSULTA_INVERSIONES}">Consulta de inversiones (MEF) ↗</a></div>
+   <label class="f">Enlaces propios del proyecto (expediente, fotos, informe, InfoObras, etc.)</label>
+   <div id="enlaces">${(p.enlaces||[]).map((e,i)=>`<div class="row" data-i="${i}" style="margin:.3rem 0"><input type="text" class="grow et" placeholder="Título" value="${esc(e.t)}"><input type="url" class="grow eu" placeholder="https://…" value="${esc(e.u)}">${e.u?`<a class="btn ghost" target="_blank" rel="noopener" href="${esc(e.u)}">Abrir</a>`:""}</div>`).join("")}</div>
+   <button class="btn ghost" id="bEnlace">+ Agregar enlace</button>
+   <label class="f" for="notas">Notas del proyecto</label><textarea id="notas">${esc(p.notas)}</textarea>
+   <div class="muted">Fuente de la ficha: ${esc(p.fuente_ficha||"manual")} · Creado ${fmtFecha(p.fecha_creacion)} por ${esc(p.creado_por)} · Modificado ${fmtFecha(p.fecha_modificacion)}</div>
+  </div>
+  <div class="card"><h3>Visitas de supervisión (${vs.length})</h3>
+   ${vs.length?vs.map((v,i)=>{const c=calcular(v);return `<div class="card ${v.estado==="CERRADA"?"lock":"draft"} vis" data-u="${v.uuid}" tabindex="0" style="cursor:pointer">
+     <div class="row" style="justify-content:space-between"><b>Visita N.° ${v.numero} · ${fmtFecha(v.fecha_creacion)}</b><span class="pill ${c.sem}">${c.txt}${c.pct!==null?" · "+c.pct+"%":""}</span></div>
+     <div class="muted">${v.estado==="CERRADA"?"🔒 Cerrada":"✎ Borrador"} · ${esc(v.supervisor)} · ${c.resp}/${c.total} respondidas · avance físico ${v.avance_fisico??"—"}%${c.crit.length?" · <b>"+c.crit.length+" hallazgo(s) crítico(s)</b>":""}</div></div>`}).join(""):`<p class="muted">Aún no hay visitas.</p>`}
+   <div id="mapaBox"></div>
+  </div>`;
+  $("#volver").onclick=e=>{e.preventDefault();ir("proyectos");};
+  $("#bEnlace").onclick=()=>{ const d=document.createElement("div"); d.className="row"; d.style.margin=".3rem 0"; d.innerHTML=`<input type="text" class="grow et" placeholder="Título"><input type="url" class="grow eu" placeholder="https://…">`; $("#enlaces").appendChild(d); };
+  $("#bGps").onclick=()=>gps(pos=>{ $("#lat").value=c6(pos.lat); $("#lon").value=c6(pos.lon); toast(`GPS ±${Math.round(pos.acc)} m`); });
+  $("#bCeplan").onclick=async()=>{ const cui=$("#cui").value.trim(); if(!/^\d+$/.test(cui)) return toast("Escriba un CUI numérico"); if(!navigator.onLine) return toast("Sin internet: complete la ficha a mano");
+    $("#ceplanMsg").textContent="Buscando en 21 capas de CEPLAN…"; const r=await buscarCeplan(cui);
+    if(!r){ $("#ceplanMsg").textContent="No se encontró ese CUI en las capas de proyectos pendientes de CEPLAN. Complete los datos a mano."; return; }
+    const a=r.props; $("#nombre").value=a.nombredela||""; $("#sector").value=a.funcion||""; $("#departamento").value=a.departamen||""; $("#provincia").value=a.provincia||""; $("#distrito").value=a.distrito||"";
+    $("#lat").value=c6(a.latitud??r.geom[1]); $("#lon").value=c6(a.longitud??r.geom[0]); $("#monto").value=a.montoviabl??""; $("#situacion").value=[a.situacion,a.estadodela].filter(Boolean).join(" · ");
+    $("#modulo").value=moduloSugerido(a.funcion); const cs=new Set(String($("#capas").value).split(/[,;\s]+/).filter(Boolean)); cs.add(r.capa[0]); $("#capas").value=[...cs].join(", ");
+    p.fuente_ficha=`CEPLAN WFS ${r.capa[1]} (consulta ${fmtFecha(isoLima())})`; $("#ceplanMsg").innerHTML=`✔ Encontrado en capa <b>${esc(r.capa[2])}</b> (id ${r.capa[0]}). Revise y guarde.`; };
+  $$(".vis").forEach(c=>{ const fn=()=>{ VISITA_SEL=c.dataset.u; ir("visita"); }; c.onclick=fn; c.onkeydown=e=>{if(e.key==="Enter")fn();}; });
+  const f=$("#foot"); f.classList.remove("hide");
+  f.innerHTML=`<button class="btn" id="bGuardar">Guardar ficha</button><button class="btn sec" id="bNVisita">+ Nueva visita</button><button class="btn ghost" id="bMapa">Ver mapa</button>${PROY_SEL?`<button class="btn ghost" id="bBaja">Dar de baja</button>`:""}`;
+  const guardar=async()=>{ const nuevo=!PROY_SEL; const sit=$("#situacion").value;
+    Object.assign(p,{cui:$("#cui").value.trim(),nombre:$("#nombre").value.trim(),entidad:$("#entidad").value.trim(),sector:$("#sector").value.trim(),modulo:$("#modulo").value,departamento:$("#departamento").value.trim(),provincia:$("#provincia").value.trim(),distrito:$("#distrito").value.trim(),ubigeo:$("#ubigeo").value.trim(),lat:$("#lat").value?Number($("#lat").value):"",lon:$("#lon").value?Number($("#lon").value):"",monto:$("#monto").value.trim(),situacion:sit,estado_inv:"",capas_geoperu:$("#capas").value,notas:$("#notas").value,
+      enlaces:$$("#enlaces .row").map(r=>({t:$(".et",r).value.trim(),u:$(".eu",r).value.trim()})).filter(e=>e.u)});
+    if(!p.nombre) { toast("Falta el nombre del proyecto"); return false; }
+    if(p.lat!==""&&(isNaN(p.lat)||p.lat<-19||p.lat>0.5||isNaN(p.lon)||p.lon<-82||p.lon>-68)){ toast("Coordenadas fuera del Perú: revise latitud/longitud"); return false; }
+    const dup=(await DB.all("proyectos")).find(x=>x.cui&&x.cui===p.cui&&x.uuid!==p.uuid&&x.estado_registro!=="BAJA"); if(dup) toast("Aviso: ya existe otro proyecto con ese CUI",3500);
+    audMod(p); await DB.put("proyectos",p); await log(nuevo?"CREAR":"EDITAR","proyecto",p.uuid,p.cui); PROY_SEL=p.uuid; toast("Ficha guardada ✔"); return true; };
+  $("#bGuardar").onclick=async()=>{ if(await guardar()) vProyecto(); };
+  $("#bNVisita").onclick=async()=>{ if(!CFG.usuario) return dlgUsuario(); if(!(await guardar())) return; VISITA_SEL=await nuevaVisita(p); ir("visita"); };
+  $("#bMapa").onclick=()=>verMapa(p,vs);
+  $("#bBaja")&&($("#bBaja").onclick=async()=>{ if(!confirm("¿Dar de baja este proyecto? No se borra: queda oculto y registrado en la bitácora.")) return; p.estado_registro="BAJA"; audMod(p); await DB.put("proyectos",p); await log("BAJA","proyecto",p.uuid,p.cui); ir("proyectos"); });
+}
+async function buscarCeplan(cui){
+  const tareas=CEPLAN_CAPAS.map(async c=>{ const u=`${CEPLAN_WFS}?service=WFS&version=2.0.0&request=GetFeature&typeNames=geoceplan:${c[1]}&count=1&outputFormat=application/json&CQL_FILTER=codigounic=${encodeURIComponent(cui)}`;
+    try{ const r=await fetch(u); if(!r.ok) return null; const j=await r.json(); const f=j.features&&j.features[0]; return f?{capa:c,props:f.properties,geom:f.geometry?f.geometry.coordinates:[null,null]}:null; }catch(e){ return null; } });
+  const res=await Promise.all(tareas); return res.find(Boolean)||null; }
+function gps(ok){ if(!navigator.geolocation) return toast("Este equipo no tiene GPS disponible");
+  toast("Obteniendo ubicación…",1500); navigator.geolocation.getCurrentPosition(p=>ok({lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy}),e=>toast("No se pudo obtener GPS: "+e.message,4000),{enableHighAccuracy:true,timeout:20000,maximumAge:0}); }
+
+/* ---------- mapa (solo con internet; carga Leaflet bajo demanda) ---------- */
+function cargarLeaflet(){ return new Promise((res,rej)=>{ if(window.L) return res(); const css=document.createElement("link"); css.rel="stylesheet"; css.href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"; document.head.appendChild(css);
+  const s=document.createElement("script"); s.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
+async function verMapa(p,vs){ const box=$("#mapaBox"); if(!navigator.onLine){ box.innerHTML=`<p class="muted">El mapa necesita internet. Sin conexión, use las coordenadas y el visor GEOPERÚ cuando vuelva la señal.</p>`; return; }
+  box.innerHTML=`<h3>Mapa</h3><div id="mapa"></div><p class="muted">Capas: OpenStreetMap, manzanas INEI (WMS) y proyectos CEPLAN del sector (WMS). Puntos: ● proyecto · ○ visitas.</p>`;
+  try{ await cargarLeaflet(); }catch(e){ box.innerHTML=`<p class="muted">No se pudo cargar el mapa.</p>`; return; }
+  const lat=Number(p.lat)||-9.19, lon=Number(p.lon)||-75.02; const m=L.map("mapa").setView([lat,lon],p.lat?16:5);
+  const osm=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(m);
+  const mz=L.tileLayer.wms(WMS_INEI,{layers:"Interoperabilidad:ig_manzana",format:"image/png",transparent:true,attribution:"INEI"});
+  const cap=CEPLAN_CAPAS.find(c=>String(p.capas_geoperu||"").includes(c[0]));
+  const ov={"Manzanas INEI":mz}; if(cap) ov["CEPLAN · "+cap[2]]=L.tileLayer.wms("https://geo.ceplan.gob.pe/geoserver/geoceplan/wms",{layers:"geoceplan:"+cap[1],format:"image/png",transparent:true,attribution:"CEPLAN"}).addTo(m);
+  L.control.layers({"OpenStreetMap":osm},ov).addTo(m);
+  if(p.lat) L.circleMarker([lat,lon],{radius:9,weight:3,color:"#A8401A",fillOpacity:.8}).addTo(m).bindPopup(esc(p.nombre));
+  (vs||[]).filter(v=>v.lat).forEach(v=>L.circleMarker([v.lat,v.lon],{radius:7,weight:2,color:"#C98A12",fillOpacity:.2}).addTo(m).bindPopup("Visita N.° "+v.numero+" · "+fmtFecha(v.fecha_creacion)));
+}
+
+/* ================= VISITA (CHECKLIST) ================= */
+async function nuevaVisita(p){ const vs=(await DB.all("visitas")).filter(v=>v.proyecto_uuid===p.uuid);
+  const v={uuid:uuid(),proyecto_uuid:p.uuid,cui:p.cui,numero:vs.length+1,plantillas:["NUCLEO",p.modulo||"GEN"],versiones:{},supervisor:CFG.usuario,cargo:CFG.cargo||"",lat:"",lon:"",precision:"",respuestas:{},avance_fisico:"",avance_programado:"",observaciones:"",recomendaciones:"",estado:"BORRADOR",hash:"",hash_prev:"",...audNuevo()};
+  for(const id of v.plantillas){ const pl=PLANT_CACHE.find(x=>x.id===id); v.versiones[id]=pl?pl.version:"?"; }
+  await DB.put("visitas",v); await log("CREAR","visita",v.uuid,`${p.cui} N.°${v.numero}`); return v.uuid; }
+async function vVisita(){
+  if(!VISITA_SEL){ $("#app").innerHTML=`<div class="card"><h2>Visita</h2><p>Para iniciar una visita, abra un proyecto en <b>Proyectos</b> y pulse <b>+ Nueva visita</b>.</p><button class="btn" id="bIr">Ir a proyectos</button></div>`; $("#bIr").onclick=()=>ir("proyectos"); return; }
+  const v=await DB.get("visitas",VISITA_SEL); if(!v){ VISITA_SEL=null; return vVisita(); }
+  const p=await DB.get("proyectos",v.proyecto_uuid)||{}; const cerrada=v.estado==="CERRADA"; const c=calcular(v);
+  const fotos=(await DB.all("fotos")).filter(f=>f.visita_uuid===v.uuid);
+  const secciones=[]; for(const id of v.plantillas){ const pl=PLANT_CACHE.find(x=>x.id===id); if(pl) pl.secciones.forEach(s=>secciones.push(s)); }
+  $("#app").innerHTML=`
+  <p><a href="#" id="volver">← Ficha del proyecto</a></p>
+  <div class="card ${cerrada?"lock":"draft"}"><h2>Visita N.° ${v.numero} · ${esc(p.nombre||"")}</h2>
+   <div class="muted">CUI ${esc(p.cui||"—")} · ${cerrada?"🔒 CERRADA el "+fmtFecha(v.fecha_cierre)+" (no editable)":"✎ Borrador: se guarda solo en cada cambio"} · Supervisor: ${esc(v.supervisor)}</div>
+   <div class="row" style="margin:.6rem 0"><div class="grow"><div class="bar" aria-label="Avance del checklist"><i style="width:${c.total?Math.round(c.resp*100/c.total):0}%"></i></div><span class="muted">${c.resp}/${c.total} respondidas</span></div>
+   <span class="pill ${c.sem}" style="font-size:1rem">${c.txt}${c.pct!==null?" · "+c.pct+"%":""}</span></div>
+   ${c.crit.length?`<div class="pill s-bad">Hallazgos críticos: ${c.crit.join(", ")}</div>`:""}
+   <div class="row"><div class="grow"><label class="f">Ubicación de la visita</label><div>${v.lat?`${c6(v.lat)}, ${c6(v.lon)} (±${Math.round(v.precision||0)} m)`:"<span class='muted'>sin GPS</span>"}</div></div>
+   ${cerrada?"":`<button class="btn sec" id="bGpsV">📍 Registrar GPS</button>`}</div>
+   <div class="row"><div class="grow"><label class="f" for="afis">Avance físico observado (%)</label><input type="number" min="0" max="100" id="afis" value="${esc(v.avance_fisico)}" ${cerrada?"disabled":""}></div>
+   <div class="grow"><label class="f" for="aprog">Avance programado a la fecha (%)</label><input type="number" min="0" max="100" id="aprog" value="${esc(v.avance_programado)}" ${cerrada?"disabled":""}></div></div>
+  </div>
+  ${secciones.map((s,si)=>{ const prs=s.preguntas; const rs=prs.filter(x=>(v.respuestas[x.cod]||{}).v).length; return `<details class="sec" ${si===0?"open":""}><summary><span>${esc(s.titulo)}</span><span class="pill ${rs===prs.length?"s-ok":"s-none"}">${rs}/${prs.length}</span></summary>
+   ${prs.map(x=>{ const r=v.respuestas[x.cod]||{}; const fs=fotos.filter(f=>f.pregunta===x.cod); return `<div class="q" data-c="${x.cod}">
+     <div class="t">${esc(x.texto)}</div><div class="meta">${x.cod} · peso ${x.peso}${x.critica?" · <b>crítica</b> (si es No, exige foto y observación)":""}${x.ayuda?" · "+esc(x.ayuda):""}</div>
+     <div class="ans" role="group" aria-label="Respuesta">${[["SI","Sí","si"],["NO","No","no"],["NA","N.A.","na"]].map(([k,t,cl])=>`<button class="${cl}" data-v="${k}" aria-pressed="${r.v===k}" ${cerrada?"disabled":""}>${t}</button>`).join("")}</div>
+     <textarea class="obs ${r.v==="NO"||r.obs?"":"hide"}" placeholder="Observación / hallazgo (qué se vio, dónde, magnitud)" ${cerrada?"disabled":""}>${esc(r.obs||"")}</textarea>
+     <div class="row"><div class="thumbs">${fs.map(f=>`<img src="${f.data}" alt="Foto ${esc(x.cod)}" title="${fmtFecha(f.fecha)}">`).join("")}</div>
+     ${cerrada?"":`<button class="btn ghost bFoto">📷 Foto${fs.length?" ("+fs.length+")":""}</button><button class="btn ghost bObs">✎ Nota</button>`}</div></div>`; }).join("")}</details>`; }).join("")}
+  <div class="card"><label class="f" for="obsg">Observaciones generales</label><textarea id="obsg" ${cerrada?"disabled":""}>${esc(v.observaciones)}</textarea>
+   <label class="f" for="reco">Recomendaciones / acciones correctivas</label><textarea id="reco" ${cerrada?"disabled":""}>${esc(v.recomendaciones)}</textarea>
+   <div class="row" style="margin-top:.5rem"><div class="thumbs">${fotos.filter(f=>!f.pregunta).map(f=>`<img src="${f.data}" alt="Foto general">`).join("")}</div>${cerrada?"":`<button class="btn ghost" id="bFotoG">📷 Foto general</button>`}</div>
+  </div>`;
+  $("#volver").onclick=e=>{e.preventDefault();PROY_SEL=v.proyecto_uuid;ir("proyecto");};
+  const guardar=async(msg)=>{ audMod(v); await DB.put("visitas",v); if(msg) toast(msg); };
+  if(!cerrada){
+    $$(".q").forEach(el=>{ const cod=el.dataset.c;
+      $$(".ans button",el).forEach(b=>b.onclick=async()=>{ const r=v.respuestas[cod]||(v.respuestas[cod]={}); r.v=(r.v===b.dataset.v?"":b.dataset.v); r.ts=isoLima(); await guardar(); vVisitaKeep(cod); });
+      $(".obs",el).onchange=async e=>{ const r=v.respuestas[cod]||(v.respuestas[cod]={}); r.obs=e.target.value; await guardar("Guardado"); };
+      $(".bObs",el).onclick=()=>{ $(".obs",el).classList.remove("hide"); $(".obs",el).focus(); };
+      $(".bFoto",el).onclick=()=>tomarFoto(v,cod); });
+    $("#bFotoG").onclick=()=>tomarFoto(v,"");
+    $("#bGpsV").onclick=()=>gps(async pos=>{ v.lat=Number(pos.lat.toFixed(6)); v.lon=Number(pos.lon.toFixed(6)); v.precision=pos.acc; await guardar("GPS registrado ✔"); vVisita(); });
+    $("#afis").onchange=async e=>{ v.avance_fisico=e.target.value; await guardar("Guardado"); };
+    $("#aprog").onchange=async e=>{ v.avance_programado=e.target.value; await guardar("Guardado"); };
+    $("#obsg").onchange=async e=>{ v.observaciones=e.target.value; await guardar("Guardado"); };
+    $("#reco").onchange=async e=>{ v.recomendaciones=e.target.value; await guardar("Guardado"); };
+  }
+  const f=$("#foot"); f.classList.remove("hide");
+  f.innerHTML=`${cerrada?"":`<button class="btn" id="bCerrar">🔒 Cerrar visita</button>`}<button class="btn sec" id="bPdf">Informe PDF</button><button class="btn ghost" id="bCorreo">✉ Correo</button>`;
+  $("#bCerrar")&&($("#bCerrar").onclick=()=>cerrarVisita(v,fotos));
+  $("#bPdf").onclick=()=>informe(v,p,fotos);
+  $("#bCorreo").onclick=()=>{ const c2=calcular(v); const cuerpo=`Proyecto: ${p.nombre}\nCUI: ${p.cui}\nVisita N.° ${v.numero} - ${fmtFecha(v.fecha_creacion)}\nSupervisor: ${v.supervisor}\nResultado: ${c2.txt} (${c2.pct??"-"}%)\nHallazgos críticos: ${c2.crit.join(", ")||"ninguno"}\nAvance físico: ${v.avance_fisico||"-"}% (programado ${v.avance_programado||"-"}%)\nObservaciones: ${v.observaciones||"-"}\n\nAdjunte el informe PDF y el paquete .json exportados.`;
+    location.href=`mailto:?subject=${encodeURIComponent("Supervisión CUI "+p.cui+" - Visita "+v.numero)}&body=${encodeURIComponent(cuerpo)}`; };
+}
+function vVisitaKeep(cod){ const y=scrollY; vVisita().then(()=>{ scrollTo(0,y); }); }
+function tomarFoto(v,cod){ const i=document.createElement("input"); i.type="file"; i.accept="image/*"; i.capture="environment";
+  i.onchange=async()=>{ const file=i.files[0]; if(!file) return; const data=await comprimir(file); const pos=await new Promise(r=>{ if(!navigator.geolocation) return r(null); navigator.geolocation.getCurrentPosition(p=>r(p.coords),()=>r(null),{enableHighAccuracy:true,timeout:8000,maximumAge:60000}); });
+    const ft={uuid:uuid(),visita_uuid:v.uuid,pregunta:cod,data,fecha:isoLima(),lat:pos?Number(pos.latitude.toFixed(6)):"",lon:pos?Number(pos.longitude.toFixed(6)):"",hash:await sha256(data),...audNuevo()};
+    await DB.put("fotos",ft); await log("FOTO","visita",v.uuid,cod||"general"); audMod(v); await DB.put("visitas",v); toast("Foto guardada ✔ ("+Math.round(data.length*0.75/1024)+" KB)"); vVisitaKeep(cod); };
+  i.click(); }
+function comprimir(file,max=1280,q=0.7){ return new Promise((res,rej)=>{ const img=new Image(); img.onload=()=>{ const k=Math.min(1,max/Math.max(img.width,img.height)); const cv=document.createElement("canvas"); cv.width=Math.round(img.width*k); cv.height=Math.round(img.height*k);
+  const ctx=cv.getContext("2d"); ctx.drawImage(img,0,0,cv.width,cv.height); ctx.fillStyle="rgba(0,0,0,.55)"; ctx.fillRect(0,cv.height-26,cv.width,26); ctx.fillStyle="#fff"; ctx.font="16px sans-serif"; ctx.fillText(`${APP.nombre} · ${fmtFecha(isoLima())} · ${CFG.usuario||""}`,8,cv.height-8);
+  URL.revokeObjectURL(img.src); res(cv.toDataURL("image/jpeg",q)); }; img.onerror=rej; img.src=URL.createObjectURL(file); }); }
+async function cerrarVisita(v,fotos){
+  const prs=preguntasDe(v.plantillas); const falt=prs.filter(x=>!(v.respuestas[x.cod]||{}).v);
+  const sinEvid=prs.filter(x=>x.critica&&(v.respuestas[x.cod]||{}).v==="NO"&&(!(v.respuestas[x.cod].obs||"").trim()||!fotos.some(f=>f.pregunta===x.cod)));
+  const err=[]; if(falt.length) err.push(`Faltan responder ${falt.length} pregunta(s): ${falt.slice(0,6).map(x=>x.cod).join(", ")}${falt.length>6?"…":""}`);
+  if(sinEvid.length) err.push(`Preguntas críticas con “No” sin foto u observación: ${sinEvid.map(x=>x.cod).join(", ")}`);
+  if(!v.lat) err.push("Falta registrar el GPS de la visita");
+  if(err.length){ alert("No se puede cerrar todavía:\n\n• "+err.join("\n• ")); return; }
+  if(!confirm("Al cerrar, la visita queda sellada (huella digital) y ya no se puede editar. ¿Cerrar?")) return;
+  const c=calcular(v); v.resultado={pct:c.pct,semaforo:c.txt,criticos:c.crit}; v.estado="CERRADA"; v.fecha_cierre=isoLima();
+  v.hash_prev=CFG.ultimo_hash||"GENESIS"; v.fotos_hash=fotos.map(f=>f.hash).sort();
+  v.sellado=contenidoSellado(v); v.hash=await sha256(v.hash_prev+"|"+canon(v.sellado)); audMod(v); await DB.put("visitas",v); await cfgSet("ultimo_hash",v.hash);
+  await log("CERRAR","visita",v.uuid,"hash "+v.hash.slice(0,16)); toast("Visita cerrada y sellada ✔"); vVisita(); }
+function contenidoSellado(v){ return {uuid:v.uuid,proyecto_uuid:v.proyecto_uuid,cui:v.cui,numero:v.numero,plantillas:v.plantillas,versiones:v.versiones,supervisor:v.supervisor,lat:v.lat,lon:v.lon,respuestas:v.respuestas,avance_fisico:v.avance_fisico,avance_programado:v.avance_programado,observaciones:v.observaciones,recomendaciones:v.recomendaciones,fecha_creacion:v.fecha_creacion,fecha_cierre:v.fecha_cierre,fotos_hash:v.fotos_hash,resultado:v.resultado}; }
+
+/* ---------- informe imprimible / PDF ---------- */
+function informe(v,p,fotos){ const c=calcular(v); const prs=preguntasDe(v.plantillas); let sec="";
+  const filas=prs.map(x=>{ const r=v.respuestas[x.cod]||{}; const t=(sec!==x.seccion)?`<tr><th colspan="4">${esc(x.seccion)}</th></tr>`:""; sec=x.seccion;
+    return t+`<tr><td>${x.cod}</td><td>${esc(x.texto)}${x.critica?" <b>(crítica)</b>":""}</td><td><b>${{SI:"Sí",NO:"No",NA:"N.A."}[r.v]||"—"}</b></td><td>${esc(r.obs||"")}</td></tr>`; }).join("");
+  $("#print").innerHTML=`<h1>Informe de supervisión en campo · Visita N.° ${v.numero}</h1>
+   <table><tr><td><b>Proyecto</b></td><td colspan="3">${esc(p.nombre)}</td></tr><tr><td><b>CUI</b></td><td>${esc(p.cui)}</td><td><b>Sector</b></td><td>${esc(p.sector)}</td></tr>
+   <tr><td><b>Ubicación</b></td><td>${esc([p.distrito,p.provincia,p.departamento].filter(Boolean).join(", "))}</td><td><b>Coordenadas visita</b></td><td>${c6(v.lat)}, ${c6(v.lon)} (WGS84)</td></tr>
+   <tr><td><b>Fecha</b></td><td>${fmtFecha(v.fecha_creacion)} (UTC-5)</td><td><b>Supervisor</b></td><td>${esc(v.supervisor)} ${esc(v.cargo||"")}</td></tr>
+   <tr><td><b>Resultado</b></td><td><b>${c.txt} · ${c.pct??"—"}%</b></td><td><b>Avance físico</b></td><td>${esc(v.avance_fisico||"—")}% (programado ${esc(v.avance_programado||"—")}%)</td></tr>
+   <tr><td><b>Hallazgos críticos</b></td><td colspan="3">${c.crit.join(", ")||"Ninguno"}</td></tr></table>
+   <h2>Checklist</h2><table><tr><th>Código</th><th>Pregunta</th><th>Resp.</th><th>Observación</th></tr>${filas}</table>
+   <h2>Observaciones generales</h2><p>${esc(v.observaciones||"—")}</p><h2>Recomendaciones</h2><p>${esc(v.recomendaciones||"—")}</p>
+   <h2>Evidencia fotográfica (${fotos.length})</h2><div>${fotos.map(f=>`<figure style="display:inline-block;margin:2px"><img src="${f.data}"><figcaption style="font-size:8pt">${esc(f.pregunta||"general")} · ${fmtFecha(f.fecha)}</figcaption></figure>`).join("")}</div>
+   <p style="font-size:8pt;margin-top:10px">Estado: ${v.estado}${v.hash?" · Huella SHA-256: "+v.hash:""} · Plantillas: ${v.plantillas.map(id=>id+" v"+(v.versiones||{})[id]).join(", ")} · Generado por ${APP.nombre} v${APP.version} el ${fmtFecha(isoLima())}</p>`;
+  setTimeout(()=>window.print(),100); }
+
+/* ================= PLANTILLAS ================= */
+async function vPlantillas(){
+  $("#app").innerHTML=`<div class="card"><h2>Plantillas de checklist</h2><p class="muted">Cada visita aplica el <b>Núcleo común</b> (igual para todo proyecto, homologado) + <b>un módulo del sector</b>. Para adaptar sin programar: descargue una plantilla, edítela en el Bloc de notas (cambie preguntas, pesos, versión) e impórtela. La versión usada queda registrada en cada visita.</p>
+   <button class="btn" id="bImpP">Importar plantilla (.json)</button></div>
+   ${PLANT_CACHE.map(p=>{ const n=p.secciones.reduce((a,s)=>a+s.preguntas.length,0); const cr=p.secciones.reduce((a,s)=>a+s.preguntas.filter(x=>x.critica).length,0); return `<details class="sec"><summary><span>${esc(p.nombre)} <span class="muted">· ${esc(p.id)} v${esc(p.version)}</span></span><span class="pill s-none">${n} preguntas · ${cr} críticas</span></summary>
+    <div class="q">${p.secciones.map(s=>`<b>${esc(s.titulo)}</b><ol>${s.preguntas.map(x=>`<li>${esc(x.texto)} <span class="muted">(${x.cod}, peso ${x.peso}${x.critica?", crítica":""})</span></li>`).join("")}</ol>`).join("")}
+    <button class="btn ghost bDesc" data-id="${p.id}">Descargar para editar</button></div></details>`; }).join("")}`;
+  $$(".bDesc").forEach(b=>b.onclick=()=>{ const p=PLANT_CACHE.find(x=>x.id===b.dataset.id); descargar(`plantilla_${p.id}_v${p.version}.json`,JSON.stringify(p,null,2)); });
+  $("#bImpP").onclick=async()=>{ const f=await elegirArchivo(".json,application/json"); if(!f) return; try{ const p=JSON.parse(await leerArchivo(f)); validarPlantilla(p);
+     const ant=PLANT_CACHE.find(x=>x.id===p.id); if(ant&&!confirm(`Ya existe ${p.id} v${ant.version}. ¿Reemplazar por v${p.version}? Las visitas anteriores conservan su versión registrada.`)) return;
+     p.importada=isoLima(); await DB.put("plantillas",p); await log("IMPORTAR","plantilla",p.id,"v"+p.version); await cargarPlantillas(); toast("Plantilla importada ✔"); vPlantillas(); }catch(e){ alert("Plantilla no válida:\n"+e.message); } };
+}
+function validarPlantilla(p){ if(!p.id||!p.nombre||!p.version||!Array.isArray(p.secciones)) throw new Error("Debe tener id, nombre, version y secciones");
+  if(!["nucleo","modulo"].includes(p.tipo)) throw new Error("tipo debe ser 'nucleo' o 'modulo'"); p.palabras=p.palabras||[]; const cods=new Set();
+  p.secciones.forEach(s=>{ if(!s.titulo||!Array.isArray(s.preguntas)) throw new Error("Cada sección necesita titulo y preguntas"); s.preguntas.forEach(x=>{ if(!x.cod||!x.texto) throw new Error("Cada pregunta necesita cod y texto"); if(cods.has(x.cod)) throw new Error("Código repetido: "+x.cod); cods.add(x.cod); x.tipo="sino"; x.peso=Math.max(1,Math.min(3,Number(x.peso)||1)); x.critica=!!x.critica; }); }); }
+async function cargarPlantillas(){ PLANT_CACHE=(await DB.all("plantillas")).sort((a,b)=>(a.tipo==="nucleo"?-1:1)-(b.tipo==="nucleo"?-1:1)||a.id.localeCompare(b.id)); }
+
+/* ================= DATOS Y SINCRONÍA ================= */
+async function vDatos(){
+  const [ps,vs,fs]=await Promise.all([DB.all("proyectos"),DB.all("visitas"),DB.all("fotos")]); const pend=vs.filter(v=>!v.sincronizado).length+ps.filter(p=>!p.sincronizado).length;
+  $("#app").innerHTML=`<div class="card"><h2>Datos y sincronía</h2>
+   <p>En este equipo: <b>${ps.length}</b> proyectos · <b>${vs.length}</b> visitas · <b>${fs.length}</b> fotos · <b>${pend}</b> registro(s) aún sin subir a la base central.</p>
+   <p class="muted">Cómo sincronizar a costo cero: 1) cada supervisor pulsa <b>Exportar paquete</b>; 2) guarda el archivo en la carpeta compartida <b>05_DATOS_CAMPO/entrantes</b> (Google Drive) o lo envía por correo/WhatsApp; 3) el coordinador pulsa <b>Importar paquete(s)</b>. Nada se borra: si un registro llega dos veces, gana la versión modificada más reciente; las visitas cerradas nunca se sobrescriben.</p></div>
+  <div class="card"><h3>Exportar</h3><div class="row">
+   <button class="btn" id="bExp">Exportar paquete completo (.json)</button>
+   <button class="btn sec" id="bExpL">Paquete liviano sin fotos</button>
+   <button class="btn sec" id="bCsv">Respuestas para Excel (.csv)</button>
+   <button class="btn sec" id="bCsvR">Resumen de visitas para Excel (.csv)</button></div></div>
+  <div class="card"><h3>Importar</h3><button class="btn" id="bImp">Importar paquete(s) .json</button><div id="impRes" class="muted"></div></div>`;
+  $("#bExp").onclick=()=>exportar(true); $("#bExpL").onclick=()=>exportar(false);
+  $("#bCsv").onclick=()=>csvRespuestas(); $("#bCsvR").onclick=()=>csvResumen();
+  $("#bImp").onclick=async()=>{ const i=document.createElement("input"); i.type="file"; i.accept=".json,application/json"; i.multiple=true; i.onchange=async()=>{ let tot={n:0,a:0,c:0,err:0}; for(const f of i.files){ try{ const r=await importar(JSON.parse(await leerArchivo(f))); tot.n+=r.n; tot.a+=r.a; tot.c+=r.c; }catch(e){ tot.err++; } }
+    $("#impRes").innerHTML=`✔ ${i.files.length} archivo(s): ${tot.n} nuevos, ${tot.a} actualizados, ${tot.c} conflictos conservados${tot.err?`, <b>${tot.err} archivo(s) con error</b>`:""}.`; await cargarPlantillas(); }; i.click(); };
+}
+async function exportar(conFotos){ const [ps,vs,fs,pl,bi]=await Promise.all([DB.all("proyectos"),DB.all("visitas"),conFotos?DB.all("fotos"):[],DB.all("plantillas"),DB.all("bitacora")]);
+  const paq={app:APP.nombre,version:APP.version,esquema:APP.esquema,exportado:isoLima(),usuario:CFG.usuario,dispositivo:CFG.dispositivo,proyectos:ps,visitas:vs,fotos:fs,plantillas:pl,bitacora:bi};
+  paq.huella=await sha256(canon({proyectos:ps.map(x=>x.uuid+x.fecha_modificacion),visitas:vs.map(x=>x.uuid+x.fecha_modificacion+(x.hash||""))}));
+  descargar(`SUPERVISA_${(CFG.usuario||"usuario").replace(/\W+/g,"_")}_${stamp()}${conFotos?"":"_sin_fotos"}.json`,JSON.stringify(paq));
+  for(const p of ps){ if(!p.exportado){ p.exportado=true; await DB.put("proyectos",p);} } for(const v of vs){ if(!v.exportado){ v.exportado=true; await DB.put("visitas",v);} }
+  await log("EXPORTAR","paquete","",`${ps.length} proy, ${vs.length} vis, ${fs.length} fotos`); toast("Paquete exportado ✔"); }
+async function importar(paq){ if(!paq||paq.app!==APP.nombre) throw new Error("No es un paquete de "+APP.nombre); const r={n:0,a:0,c:0};
+  const merge=async(store,lista,clave)=>{ for(const inc of (lista||[])){ const loc=await DB.get(store,inc[clave]);
+     if(!loc){ await DB.put(store,inc); r.n++; continue; }
+     if(store==="visitas"&&loc.estado==="CERRADA"&&inc.hash!==loc.hash){ r.c++; await log("CONFLICTO","visita",inc.uuid,"se conserva la versión local cerrada"); continue; }
+     if((inc.fecha_modificacion||"")>(loc.fecha_modificacion||"")){ await DB.put(store,inc); r.a++; } } };
+  await merge("proyectos",paq.proyectos,"uuid"); await merge("visitas",paq.visitas,"uuid"); await merge("fotos",paq.fotos,"uuid");
+  for(const b of (paq.bitacora||[])) if(!(await DB.get("bitacora",b.id))) await DB.put("bitacora",b);
+  for(const p of (paq.plantillas||[])){ const loc=await DB.get("plantillas",p.id); if(!loc||String(p.version)>String(loc.version)) await DB.put("plantillas",p); }
+  await log("IMPORTAR","paquete","",`de ${paq.usuario||"?"} (${paq.dispositivo||"?"}) exportado ${fmtFecha(paq.exportado)}: ${r.n} nuevos, ${r.a} act., ${r.c} conflictos`); return r; }
+function csvCampo(x){ const s=String(x??""); return /[;"\n\r]/.test(s)?`"${s.replace(/"/g,'""')}"`:s; }
+function csvDescargar(nombre,filas){ descargar(nombre,"\uFEFF"+filas.map(f=>f.map(csvCampo).join(";")).join("\r\n"),"text/csv;charset=utf-8"); }
+async function csvRespuestas(){ const [ps,vs,fs]=await Promise.all([DB.all("proyectos"),DB.all("visitas"),DB.all("fotos")]); const filas=[["CUI","Proyecto","Visita_N","Fecha","Supervisor","Estado_visita","Seccion","Codigo","Pregunta","Peso","Critica","Respuesta","Observacion","N_fotos","Latitud","Longitud"]];
+  for(const v of vs.filter(v=>v.estado_registro!=="BAJA")){ const p=ps.find(x=>x.uuid===v.proyecto_uuid)||{}; for(const x of preguntasDe(v.plantillas)){ const r=v.respuestas[x.cod]||{}; filas.push([p.cui,p.nombre,v.numero,fmtFecha(v.fecha_creacion),v.supervisor,v.estado,x.seccion,x.cod,x.texto,x.peso,x.critica?"SI":"NO",{SI:"Sí",NO:"No",NA:"N.A."}[r.v]||"",r.obs||"",fs.filter(f=>f.visita_uuid===v.uuid&&f.pregunta===x.cod).length,c6(v.lat),c6(v.lon)]); } }
+  csvDescargar(`SUPERVISA_respuestas_${stamp()}.csv`,filas); }
+async function csvResumen(){ const [ps,vs]=await Promise.all([DB.all("proyectos"),DB.all("visitas")]); const filas=[["CUI","Proyecto","Entidad","Sector","Departamento","Provincia","Distrito","Visita_N","Fecha","Supervisor","Estado","Puntaje_%","Semaforo","Criticos","Avance_fisico_%","Avance_programado_%","Brecha_avance_pp","Latitud","Longitud","Huella"]];
+  for(const v of vs.filter(v=>v.estado_registro!=="BAJA")){ const p=ps.find(x=>x.uuid===v.proyecto_uuid)||{}; const c=calcular(v); const br=(v.avance_fisico!==""&&v.avance_programado!=="")?(Number(v.avance_fisico)-Number(v.avance_programado)):"";
+    filas.push([p.cui,p.nombre,p.entidad,p.sector,p.departamento,p.provincia,p.distrito,v.numero,fmtFecha(v.fecha_creacion),v.supervisor,v.estado,c.pct??"",c.txt,c.crit.join(" "),v.avance_fisico,v.avance_programado,br,c6(v.lat),c6(v.lon),v.hash||""]); }
+  csvDescargar(`SUPERVISA_resumen_visitas_${stamp()}.csv`,filas); }
+
+/* ================= AUDITORÍA (modo protegido) ================= */
+async function vAuditoria(){
+  if(!AUDITOR){ $("#app").innerHTML=`<div class="card"><h2>Auditoría</h2><p class="muted">Zona para el coordinador o auditor: bitácora, huellas digitales y verificación de integridad. Los técnicos de campo no necesitan entrar aquí.</p>
+    <label class="f" for="pin">${CFG.pin_hash?"PIN de auditor":"Cree un PIN de auditor (mínimo 4 dígitos)"}</label><input type="password" id="pin" inputmode="numeric" autocomplete="off">
+    <p><button class="btn" id="bPin">${CFG.pin_hash?"Entrar":"Crear PIN y entrar"}</button></p>
+    <p class="muted">Nota honesta: este PIN evita cambios por descuido, pero no es un control de seguridad fuerte (quien tenga el equipo y conocimientos técnicos puede leer la base local). La garantía real es la huella SHA-256 de cada visita cerrada.</p></div>`;
+    $("#bPin").onclick=async()=>{ const v=$("#pin").value; if(v.length<4) return toast("Mínimo 4 dígitos"); const h=await sha256("supervisa|"+v);
+      if(!CFG.pin_hash){ await cfgSet("pin_hash",h); await log("CREAR","pin_auditor",""); } else if(h!==CFG.pin_hash){ await log("FALLO","pin_auditor",""); return toast("PIN incorrecto"); }
+      AUDITOR=true; await log("ENTRAR","auditoria",""); vAuditoria(); }; return; }
+  const [bi,vs]=await Promise.all([DB.all("bitacora"),DB.all("visitas")]); bi.sort((a,b)=>a.ts<b.ts?1:-1);
+  $("#app").innerHTML=`<div class="card"><h2>Auditoría</h2><div class="row"><button class="btn" id="bVer">Verificar integridad de visitas cerradas</button><button class="btn sec" id="bBit">Bitácora a Excel (.csv)</button><button class="btn ghost" id="bSalir">Salir de auditoría</button></div><div id="verRes" style="margin-top:.6rem"></div>
+   <p class="muted">Equipo: <b>${esc(CFG.dispositivo)}</b> · Última huella local: <code>${esc((CFG.ultimo_hash||"—").slice(0,24))}…</code></p></div>
+   <div class="card"><h3>Visitas</h3><div class="scroll"><table class="t"><tr><th>CUI</th><th>N.°</th><th>Estado</th><th>Creada</th><th>Cerrada</th><th>Supervisor</th><th>Dispositivo</th><th>Huella</th><th></th></tr>
+   ${vs.sort((a,b)=>a.fecha_creacion<b.fecha_creacion?1:-1).map(v=>`<tr><td>${esc(v.cui)}</td><td>${v.numero}</td><td>${v.estado}</td><td>${fmtFecha(v.fecha_creacion)}</td><td>${fmtFecha(v.fecha_cierre)}</td><td>${esc(v.supervisor)}</td><td>${esc((v.dispositivo||"").slice(0,8))}</td><td><code>${esc((v.hash||"").slice(0,12))}</code></td><td>${v.estado==="CERRADA"?`<button class="btn ghost bReab" data-u="${v.uuid}">Reabrir</button>`:""}</td></tr>`).join("")}</table></div></div>
+   <div class="card"><h3>Bitácora (últimos 300 eventos)</h3><div class="scroll"><table class="t"><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>Detalle</th></tr>
+   ${bi.slice(0,300).map(b=>`<tr><td>${fmtFecha(b.ts)}</td><td>${esc(b.usuario)}</td><td>${esc(b.accion)}</td><td>${esc(b.entidad)}</td><td>${esc(b.detalle)}</td></tr>`).join("")}</table></div></div>`;
+  $("#bSalir").onclick=()=>{ AUDITOR=false; vAuditoria(); };
+  $("#bBit").onclick=()=>csvDescargar(`SUPERVISA_bitacora_${stamp()}.csv`,[["Fecha","Usuario","Dispositivo","Accion","Entidad","Referencia","Detalle"],...bi.map(b=>[fmtFecha(b.ts),b.usuario,b.dispositivo,b.accion,b.entidad,b.ref,b.detalle])]);
+  $("#bVer").onclick=async()=>{ const fs=await DB.all("fotos"); let ok=0,mal=[]; for(const v of vs.filter(x=>x.estado==="CERRADA")){ const h=await sha256(v.hash_prev+"|"+canon(v.sellado||contenidoSellado(v)));
+      const fotosAct=fs.filter(f=>f.visita_uuid===v.uuid); let fotosOk=true; for(const f of fotosAct){ if(await sha256(f.data)!==f.hash) fotosOk=false; }
+      if(h===v.hash&&fotosOk) ok++; else mal.push(`${v.cui} visita ${v.numero}`); }
+    $("#verRes").innerHTML=mal.length?`<span class="pill s-bad">⚠ ${mal.length} visita(s) alteradas después del cierre: ${esc(mal.join("; "))}</span>`:`<span class="pill s-ok">✔ ${ok} visita(s) cerradas verificadas: sin alteraciones</span>`; await log("VERIFICAR","integridad","",`${ok} ok, ${mal.length} alteradas`); };
+  $$(".bReab").forEach(b=>b.onclick=async()=>{ if(sesion()&&(CFG.perfil||{}).rol!=="gerente") return alert("Con base central, solo el gerente puede reabrir una visita cerrada."); const motivo=prompt("Motivo de la reapertura (queda en la bitácora):"); if(!motivo) return; const v=await DB.get("visitas",b.dataset.u);
+    v.estado="BORRADOR"; v.reabierta=(v.reabierta||[]).concat([{ts:isoLima(),por:CFG.usuario,motivo,hash_anterior:v.hash}]); v.hash=""; audMod(v); await DB.put("visitas",v); await log("REABRIR","visita",v.uuid,motivo); vAuditoria(); });
+}
+
+/* ================= AYUDA ================= */
+function vAyuda(){ $("#app").innerHTML=`<div class="card"><h2>Cómo se usa (en 6 pasos)</h2><ol>
+ <li><b>Registre su nombre</b> como supervisor (se guarda en cada visita).</li>
+ <li><b>Cree el proyecto</b>: escriba el CUI y, si hay internet, pulse <i>Autocompletar desde CEPLAN</i>. Revise y guarde.</li>
+ <li><b>Ligue sus enlaces</b>: ids de capas GEOPERÚ (se arma el enlace al visor) y enlaces propios (expediente, carpeta de fotos, etc.).</li>
+ <li><b>Nueva visita</b>: responda Sí / No / N.A. Si una pregunta crítica es “No”, agregue foto y observación.</li>
+ <li><b>Cerrar visita</b>: se valida, se calcula el semáforo y se sella con una huella digital (no editable).</li>
+ <li><b>Exporte</b> el paquete .json y póngalo en la carpeta compartida para consolidar.</li></ol>
+ <h3>Semáforo</h3><p><span class="pill s-ok">Conforme</span> 85 % o más · <span class="pill s-warn">Con observaciones</span> 60–84 % · <span class="pill s-bad">Crítico</span> menos de 60 % o cualquier pregunta crítica en “No”. El puntaje pondera cada pregunta (peso 1 a 3) y no cuenta las N.A.</p>
+ <h3>Sin internet</h3><p>Todo funciona sin señal: fichas, visitas, fotos, GPS, informes y exportación. Solo necesitan internet: autocompletar desde CEPLAN, el mapa y los enlaces externos.</p>
+ <h3>Cuenta y base central</h3><p>Ingrese en <b>Cuenta</b> con el correo y la contraseña que le dio el gerente (la primera vez necesita internet). Desde ahí sus proyectos, visitas, fotos y bitácora se envían solos a la base central cada vez que hay señal. El indicador ☁ de arriba muestra cuántos registros faltan subir; púlselo para sincronizar al instante.</p>
+ <h3>Instalar en el celular</h3><p>Abra la dirección web de la app en Chrome y pulse <b>⤓ Instalar</b> (o menú ⋮ → <i>Instalar app</i>). Queda un ícono como cualquier app y abre sin internet. Cuando haya una versión nueva aparecerá el aviso <b>Actualizar</b>: sus datos no se pierden.</p>
+ <h3>Dónde quedan los datos</h3><p>En el navegador de este equipo. <b>No borre los datos del navegador</b> sin antes exportar un paquete completo.</p>
+ <p class="muted">${APP.nombre} v${APP.version} · Fecha y hora UTC-5 (dd/MM/aaaa HH:mm:ss) · Coordenadas WGS84 con 6 decimales.</p></div>`; }
+
+/* ---------- diálogo de usuario ---------- */
+function dlgUsuario(){ const d=$("#dlg"); $("#dlgBody").innerHTML=`<h2>Supervisor</h2><label class="f" for="uN">Nombres y apellidos</label><input type="text" id="uN" value="${esc(CFG.usuario||"")}">
+  <label class="f" for="uC">Cargo / entidad (opcional)</label><input type="text" id="uC" value="${esc(CFG.cargo||"")}"><p class="row"><button class="btn" id="uOk">Guardar</button><button class="btn ghost" id="uX">Cancelar</button></p>`;
+  d.showModal(); $("#uN").focus(); $("#uX").onclick=()=>d.close();
+  $("#uOk").onclick=async()=>{ const n=$("#uN").value.trim(); if(n.length<5) return toast("Escriba nombres y apellidos"); const ant=CFG.usuario; await cfgSet("usuario",n); await cfgSet("cargo",$("#uC").value.trim()); await log(ant?"CAMBIAR":"CREAR","usuario","",`${ant||""} → ${n}`); if(sesion()&&navigator.onLine){ try{ await authFetch(`/rest/v1/perfiles?id=eq.${sesion().uid}`,{method:"PATCH",headers:{"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({nombre:n,cargo:$("#uC").value.trim()})}); }catch(e){} } d.close(); render(); }; }
+
+/* ================= BASE CENTRAL (Supabase) · acceso y sincronización ================= */
+/* La clave publicable es pública por diseño: la seguridad real está en las reglas por fila de la base. */
+const CENTRAL={ url:"https://nxymbcwcitrcewrhsust.supabase.co", clave:"sb_publishable_G1977nXriJsz3vDy2TEtFw_UCB1ViwG" };
+let SYNC_ACTIVO=false, SYNC_TIMER=null;
+const sesion=()=>CFG.sesion||null;
+const nz=v=>(v===""||v===undefined||v===null||isNaN(Number(v)))?null:Number(v);
+const tz=v=>v?v:null;
+const cmpF=(a,b)=>(new Date(a||0).getTime())-(new Date(b||0).getTime());
+async function guardarSesion(j){ const ant=sesion()||{}; const s={access_token:j.access_token,refresh_token:j.refresh_token,expires_at:j.expires_at||Math.floor(Date.now()/1000)+(j.expires_in||3600),uid:(j.user&&j.user.id)||ant.uid,email:(j.user&&j.user.email)||ant.email}; await cfgSet("sesion",s); return s; }
+async function refrescar(){ const s=sesion(); if(!s) throw new Error("Sin sesión");
+  const r=await fetch(CENTRAL.url+"/auth/v1/token?grant_type=refresh_token",{method:"POST",headers:{apikey:CENTRAL.clave,"Content-Type":"application/json"},body:JSON.stringify({refresh_token:s.refresh_token})});
+  if(!r.ok) throw new Error("Su sesión venció: ingrese de nuevo en Cuenta"); return guardarSesion(await r.json()); }
+async function authFetch(ruta,opt={}){ let s=sesion(); if(!s) throw new Error("Sin sesión");
+  if(Date.now()/1000>(s.expires_at||0)-60) s=await refrescar();
+  const h=Object.assign({},opt.headers||{},{apikey:CENTRAL.clave,Authorization:"Bearer "+s.access_token});
+  let r=await fetch(CENTRAL.url+ruta,{...opt,headers:h});
+  if(r.status===401){ s=await refrescar(); h.Authorization="Bearer "+s.access_token; r=await fetch(CENTRAL.url+ruta,{...opt,headers:h}); }
+  return r; }
+async function errTxt(r){ const t=await r.text().catch(()=>""); try{ const j=JSON.parse(t); return j.message||j.error||j.msg||t; }catch(e){ return t||("HTTP "+r.status); } }
+async function ingresar(email,clave){ const r=await fetch(CENTRAL.url+"/auth/v1/token?grant_type=password",{method:"POST",headers:{apikey:CENTRAL.clave,"Content-Type":"application/json"},body:JSON.stringify({email,password:clave})});
+  const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error_description||j.msg||"Correo o contraseña incorrectos");
+  await guardarSesion(j); const p=await cargarPerfil(); await log("INGRESAR","cuenta","",email); return p; }
+async function cargarPerfil(){ const r=await authFetch(`/rest/v1/perfiles?id=eq.${sesion().uid}&select=*`); if(!r.ok) throw new Error(await errTxt(r)); const p=(await r.json())[0]||null; await cfgSet("perfil",p);
+  if(p&&p.activo&&p.nombre){ await cfgSet("usuario",p.nombre); if(p.cargo) await cfgSet("cargo",p.cargo); } return p; }
+async function salir(){ const n=await pendientes(); if(n&&!confirm(`Hay ${n} registro(s) sin subir. Seguirán guardados en este equipo y subirán cuando vuelva a ingresar. ¿Cerrar sesión?`)) return;
+  try{ await fetch(CENTRAL.url+"/auth/v1/logout",{method:"POST",headers:{apikey:CENTRAL.clave,Authorization:"Bearer "+sesion().access_token}}); }catch(e){}
+  await log("SALIR","cuenta",""); await cfgSet("sesion",null); await cfgSet("perfil",null); pintarSync(); }
+async function pendientes(){ const [ps,vs,fs]=await Promise.all([DB.all("proyectos"),DB.all("visitas"),DB.all("fotos")]); return ps.filter(x=>!x.sincronizado).length+vs.filter(x=>!x.sincronizado).length+fs.filter(x=>!x.subida).length; }
+async function pintarSync(){ const el=$("#sync"); if(!el) return; if(!sesion()){ el.textContent="☁ Sin cuenta"; el.className="pill s-none"; el.title="Ingrese en Cuenta para sincronizar"; return; }
+  if(SYNC_ACTIVO){ el.textContent="☁ Sincronizando…"; el.className="pill s-warn"; return; }
+  const n=await pendientes(); el.textContent=n?`☁ ${n} por subir`:"☁ Al día"; el.className="pill "+(n?"s-warn":"s-ok"); el.title=CFG.ultima_sync?"Última sincronización: "+fmtFecha(CFG.ultima_sync):"Aún no sincroniza"; }
+function sincronizarPronto(){ if(!sesion()) return; clearTimeout(SYNC_TIMER); SYNC_TIMER=setTimeout(()=>sincronizar(false),20000); }
+function proyAServidor(p){ return {uuid:p.uuid,cui:p.cui||null,nombre:p.nombre||"(sin nombre)",entidad:p.entidad||null,sector:p.sector||null,funcion:p.funcion||null,modulo:p.modulo||null,departamento:p.departamento||null,provincia:p.provincia||null,distrito:p.distrito||null,ubigeo:p.ubigeo||null,lat:nz(p.lat),lon:nz(p.lon),monto:(p.monto===""||p.monto==null)?null:String(p.monto),situacion:p.situacion||null,estado_inv:p.estado_inv||null,fuente_ficha:p.fuente_ficha||null,capas_geoperu:p.capas_geoperu||null,enlaces:p.enlaces||[],notas:p.notas||null,creado_por:p.creado_por||null,fecha_creacion:tz(p.fecha_creacion),modificado_por:p.modificado_por||null,fecha_modificacion:tz(p.fecha_modificacion),estado_registro:p.estado_registro||"ACTIVO",origen_captura:p.origen_captura||null,dispositivo:p.dispositivo||null}; }
+function visAServidor(v){ return {uuid:v.uuid,proyecto_uuid:v.proyecto_uuid,cui:v.cui||null,numero:v.numero||null,plantillas:v.plantillas||[],versiones:v.versiones||{},supervisor:v.supervisor||null,cargo:v.cargo||null,lat:nz(v.lat),lon:nz(v.lon),precision_m:nz(v.precision),respuestas:v.respuestas||{},avance_fisico:nz(v.avance_fisico),avance_programado:nz(v.avance_programado),observaciones:v.observaciones||null,recomendaciones:v.recomendaciones||null,estado:v.estado||"BORRADOR",fecha_cierre:tz(v.fecha_cierre),hash:v.hash||null,hash_prev:v.hash_prev||null,fotos_hash:v.fotos_hash||null,resultado:v.resultado||null,sellado:v.sellado||null,reabierta:v.reabierta||[],creado_por:v.creado_por||null,fecha_creacion:tz(v.fecha_creacion),modificado_por:v.modificado_por||null,fecha_modificacion:tz(v.fecha_modificacion),estado_registro:v.estado_registro||"ACTIVO",origen_captura:v.origen_captura||null,dispositivo:v.dispositivo||null}; }
+function servAProy(s){ const p={...s,sincronizado:true}; p.lat=s.lat==null?"":Number(s.lat); p.lon=s.lon==null?"":Number(s.lon); p.monto=s.monto||""; return p; }
+function servAVis(s){ const v={...s,sincronizado:true}; v.precision=s.precision_m; v.lat=s.lat==null?"":Number(s.lat); v.lon=s.lon==null?"":Number(s.lon); v.avance_fisico=s.avance_fisico==null?"":String(s.avance_fisico); v.avance_programado=s.avance_programado==null?"":String(s.avance_programado); v.observaciones=s.observaciones||""; v.recomendaciones=s.recomendaciones||""; return v; }
+async function subir(ruta,obj,prefer="resolution=merge-duplicates,return=minimal"){ const r=await authFetch(ruta,{method:"POST",headers:{"Content-Type":"application/json",Prefer:prefer},body:JSON.stringify(obj)}); return r.ok?null:await errTxt(r); }
+async function bajarTodo(tabla,desde){ let out=[],off=0; while(true){ const r=await authFetch(`/rest/v1/${tabla}?select=*&order=servidor_actualizado.asc&limit=1000&offset=${off}${desde?`&servidor_actualizado=gt.${encodeURIComponent(desde)}`:""}`); if(!r.ok) throw new Error(`Bajada ${tabla}: `+await errTxt(r)); const a=await r.json(); out=out.concat(a); if(a.length<1000) return out; off+=1000; } }
+async function sincronizar(manual=false){
+  if(SYNC_ACTIVO) return; if(!sesion()){ if(manual) ir("cuenta"); return; }
+  if(!navigator.onLine){ if(manual) toast("Sin internet: se sincronizará cuando vuelva la señal"); return; }
+  SYNC_ACTIVO=true; pintarSync(); const res={sub:0,baj:0,err:[]};
+  try{
+    const perfil=await cargarPerfil(); if(!perfil||!perfil.activo) throw new Error("Su cuenta aún no fue activada por el gerente");
+    const uid=sesion().uid;
+    for(const p of (await DB.all("proyectos")).filter(x=>!x.sincronizado)){ const e=await subir("/rest/v1/proyectos?on_conflict=uuid",proyAServidor(p)); if(e) res.err.push(`Proyecto ${p.cui||p.nombre}: ${e}`); else { p.sincronizado=true; await DB.put("proyectos",p); res.sub++; } }
+    for(const v of (await DB.all("visitas")).filter(x=>!x.sincronizado)){ const e=await subir("/rest/v1/visitas?on_conflict=uuid",visAServidor(v)); if(e) res.err.push(`Visita ${v.cui||""} N.° ${v.numero}: ${e}`); else { v.sincronizado=true; await DB.put("visitas",v); res.sub++; } }
+    for(const f of (await DB.all("fotos")).filter(x=>!x.subida)){
+      const ruta=`${uid}/${f.visita_uuid}/${f.uuid}.jpg`; const blob=await (await fetch(f.data)).blob();
+      const r=await authFetch(`/storage/v1/object/fotos/${ruta}`,{method:"POST",headers:{"Content-Type":"image/jpeg","x-upsert":"false"},body:blob});
+      if(!r.ok){ const t2=await errTxt(r); if(!/exist|duplicate/i.test(t2)){ res.err.push("Foto: "+t2); continue; } }
+      const e=await subir("/rest/v1/fotos?on_conflict=uuid",{uuid:f.uuid,visita_uuid:f.visita_uuid,pregunta:f.pregunta||null,storage_path:ruta,fecha:tz(f.fecha),lat:nz(f.lat),lon:nz(f.lon),hash:f.hash||null,creado_por:f.creado_por||null,dispositivo:f.dispositivo||null},"resolution=ignore-duplicates,return=minimal");
+      if(e) res.err.push("Foto: "+e); else { f.subida=true; f.storage_path=ruta; await DB.put("fotos",f); res.sub++; } }
+    const bit=(await DB.all("bitacora")).filter(b=>!b.subida);
+    if(bit.length){ const e=await subir("/rest/v1/bitacora?on_conflict=id",bit.map(b=>({id:b.id,ts:b.ts,usuario:b.usuario||null,dispositivo:b.dispositivo||null,accion:b.accion,entidad:b.entidad||null,ref:b.ref||null,detalle:b.detalle||null})),"resolution=ignore-duplicates,return=minimal");
+      if(e) res.err.push("Bitácora: "+e); else for(const b of bit){ b.subida=true; await DB.put("bitacora",b); } }
+    if(perfil.rol==="gerente"){ for(const p of PLANT_CACHE.filter(x=>x.importada&&!x.subida)){ const e=await subir("/rest/v1/plantillas?on_conflict=id",{id:p.id,version:String(p.version),tipo:p.tipo,contenido:p}); if(e) res.err.push("Plantilla "+p.id+": "+e); else { p.subida=true; await DB.put("plantillas",p); } } }
+    let maxTs=CFG.ultima_bajada||"";
+    for(const [tabla,conv] of [["proyectos",servAProy],["visitas",servAVis]]){
+      for(const s of await bajarTodo(tabla,CFG.ultima_bajada)){ if(!maxTs||s.servidor_actualizado>maxTs) maxTs=s.servidor_actualizado;
+        const loc=await DB.get(tabla,s.uuid); const inc=conv(s);
+        if(loc){ if(!loc.sincronizado&&cmpF(loc.fecha_modificacion,inc.fecha_modificacion)>0) continue;
+          const reabre=tabla==="visitas"&&loc.estado==="CERRADA"&&inc.estado!=="CERRADA"&&(inc.reabierta||[]).length>(loc.reabierta||[]).length;
+          if(tabla==="visitas"&&loc.estado==="CERRADA"&&inc.estado!=="CERRADA"&&!reabre) continue;
+          if(!reabre&&cmpF(inc.fecha_modificacion,loc.fecha_modificacion)<=0&&loc.sincronizado) continue; }
+        await DB.put(tabla,inc); res.baj++; } }
+    const rp=await authFetch("/rest/v1/plantillas?select=*"); if(rp.ok){ for(const s of await rp.json()){ const loc=PLANT_CACHE.find(x=>x.id===s.id); if(!loc||String(s.version)>String(loc.version)){ await DB.put("plantillas",{...s.contenido,subida:true,importada:s.fecha}); res.baj++; } } await cargarPlantillas(); }
+    await cfgSet("ultima_bajada",maxTs); await cfgSet("ultima_sync",isoLima());
+    if(res.sub||res.baj) await log("SINCRONIZAR","central","",`${res.sub} subidos, ${res.baj} recibidos`);
+  }catch(e){ res.err.push(e.message); }
+  SYNC_ACTIVO=false; await cfgSet("ultimo_error_sync",res.err.slice(0,5).join(" | ")); await pintarSync();
+  if(manual||res.err.length) toast(res.err.length?("⚠ "+res.err[0]):`Sincronizado ✔ ${res.sub} subidos · ${res.baj} recibidos`,4500);
+  if(res.baj&&["proyectos","proyecto"].includes(VISTA)) render();
+  return res; }
+function iniciarCentral(){ pintarSync(); $("#sync").onclick=()=>sincronizar(true);
+  addEventListener("online",()=>setTimeout(()=>sincronizar(false),3000));
+  setInterval(()=>{ if(document.visibilityState==="visible") sincronizar(false); },5*60*1000); setInterval(pintarSync,15000);
+  if(sesion()&&navigator.onLine) setTimeout(()=>sincronizar(false),1500); }
+async function vCuenta(){ const s=sesion(); const p=CFG.perfil;
+  if(!s){ $("#app").innerHTML=`<div class="card"><h2>Ingresar a la base central</h2><p class="muted">Use el correo y la contraseña que le entregó el gerente. La primera vez necesita internet; luego la app sigue funcionando sin señal y envía sus datos sola cuando hay cobertura.</p>
+    <label class="f" for="lEm">Correo</label><input type="text" id="lEm" inputmode="email" autocomplete="username" value="${esc(CFG.ultimo_correo||"")}">
+    <label class="f" for="lPw">Contraseña</label><input type="password" id="lPw" autocomplete="current-password">
+    <p class="row"><button class="btn" id="lOk">Ingresar</button><button class="btn ghost" id="lVer">Ver contraseña</button></p><div id="lMsg" class="muted"></div>
+    <p class="muted">¿Olvidó su contraseña o no tiene cuenta? Pida al gerente que la cree o la restablezca.</p></div>`;
+    $("#lVer").onclick=()=>{ const i=$("#lPw"); i.type=i.type==="password"?"text":"password"; };
+    $("#lOk").onclick=async()=>{ const em=$("#lEm").value.trim().toLowerCase(), pw=$("#lPw").value; if(!em||!pw) return toast("Escriba correo y contraseña"); if(!navigator.onLine) return toast("Necesita internet para ingresar la primera vez");
+      $("#lMsg").textContent="Verificando…"; try{ await cfgSet("ultimo_correo",em); const per=await ingresar(em,pw); $("#lPw").value="";
+        if(per&&per.activo){ toast("Bienvenido(a), "+(per.nombre||em)); sincronizar(true); } vCuenta(); }catch(e){ $("#lMsg").textContent="✖ "+e.message; } };
+    return; }
+  const n=await pendientes();
+  $("#app").innerHTML=`<div class="card"><h2>Cuenta</h2>
+   <p><b>${esc((p&&p.nombre)||CFG.usuario||"")}</b> · ${esc(s.email||"")}</p>
+   <p>Rol: <span class="pill s-none">${esc((p&&p.rol)||"—")}</span> ${p&&p.region?"· Región: "+esc(p.region):""} · Estado: ${p&&p.activo?'<span class="pill s-ok">Activa</span>':'<span class="pill s-bad">Pendiente de activación por el gerente</span>'}</p>
+   <p>Registros por subir: <b>${n}</b> · Última sincronización: ${CFG.ultima_sync?fmtFecha(CFG.ultima_sync):"—"}</p>
+   ${CFG.ultimo_error_sync?`<p class="pill s-bad">Último aviso: ${esc(CFG.ultimo_error_sync)}</p>`:""}
+   ${p&&p.activo&&["gerente","coordinador","auditor"].includes(p.rol)?`<p><a class="btn sec" href="centro_mando.html">📊 Abrir centro de mando</a></p>`:""}<p class="row"><button class="btn" id="cSync">☁ Sincronizar ahora</button><button class="btn ghost" id="cSalir">Cerrar sesión</button></p>
+   <p class="muted">La sincronización es automática cuando hay señal. Las visitas cerradas llegan selladas y nadie puede alterarlas en la base central.</p></div>`;
+  $("#cSync").onclick=async()=>{ await sincronizar(true); vCuenta(); };
+  $("#cSalir").onclick=async()=>{ await salir(); vCuenta(); }; }
+
+/* ---------- app instalable y sin conexión (solo en https o localhost) ---------- */
+let PROMPT_INST=null;
+addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); PROMPT_INST=e; const b=document.getElementById("bInstalar"); if(b) b.classList.remove("hide"); });
+function instalarPWA(){
+  $("#bInstalar").onclick=async()=>{ if(!PROMPT_INST) return; PROMPT_INST.prompt(); const r=await PROMPT_INST.userChoice; if(r.outcome==="accepted"){ toast("App instalada ✔"); log("INSTALAR","app",""); } PROMPT_INST=null; $("#bInstalar").classList.add("hide"); };
+  const seguro=location.protocol==="https:"||["localhost","127.0.0.1"].includes(location.hostname);
+  if(!("serviceWorker" in navigator)||!seguro) return;
+  const habia=!!navigator.serviceWorker.controller; let recargando=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{ if(!habia||recargando) return; recargando=true; location.reload(); });
+  navigator.serviceWorker.register("sw.js").then(reg=>{
+    const avisar=w=>{ const d=document.createElement("div"); d.className="toast"; d.innerHTML="Hay una versión nueva de la app. "; const b=document.createElement("button"); b.className="btn sec"; b.style.cssText="min-height:40px;margin-left:.5rem"; b.textContent="Actualizar"; b.onclick=()=>w.postMessage("ACTUALIZAR"); d.appendChild(b); document.body.appendChild(d); };
+    if(reg.waiting&&navigator.serviceWorker.controller) avisar(reg.waiting);
+    reg.addEventListener("updatefound",()=>{ const w=reg.installing; if(w) w.addEventListener("statechange",()=>{ if(w.state==="installed"&&navigator.serviceWorker.controller) avisar(w); }); });
+  }).catch(()=>{});
+}
+
+/* ---------- arranque ---------- */
+(async function(){
+  const persistente=await DB.open(); await cfgGet();
+  if(!CFG.dispositivo) await cfgSet("dispositivo","EQ-"+uuid().slice(0,8).toUpperCase());
+  const pls=await DB.all("plantillas"); for(const b of PLANTILLAS_BASE){ const l=pls.find(x=>x.id===b.id); if(!l||String(b.version)>String(l.version)) await DB.put("plantillas",b); }
+  await cargarPlantillas(); aplicarApariencia(); netEstado();
+  if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{});
+  if(!persistente) toast("Atención: este navegador no permite guardar datos. Exporte antes de cerrar.",6000);
+  ir("proyectos"); if(!CFG.usuario) setTimeout(dlgUsuario,300);
+  instalarPWA(); iniciarCentral();
+})();
+</script>
+</body>
+</html>
