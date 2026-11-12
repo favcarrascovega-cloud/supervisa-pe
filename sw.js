@@ -1,5 +1,5 @@
 /* SUPERVISA·PE · trabajador sin conexión. Cambie VERSION en cada publicación (debe coincidir con la versión de la app). */
-const VERSION = "0.3.1";
+const VERSION = "0.4.0";
 const CACHE = "supervisa-pe-" + VERSION;
 const SHELL = ["./", "./index.html", "./supervisa_pe.html", "./manifest.webmanifest", "./icono.svg", "./icono-192.png", "./icono-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); });

@@ -12,21 +12,21 @@
 <style>
 /* ===== Paleta cálida (modo claro por defecto) ===== */
 :root{
-  --bg:#FBF6EE; --surface:#FFFFFF; --surface2:#F4EADB; --text:#2B1D14; --muted:#6B5444;
-  --primary:#A8401A; --primary-ink:#FFFFFF; --accent:#C98A12; --border:#D9C7AE;
-  --ok:#2E7D32; --warn:#9A5B00; --bad:#B3261E; --ok-bg:#E6F2E6; --warn-bg:#FFF1D6; --bad-bg:#FBE3E1;
-  --focus:#1F5FBF; --fs:18px; --radius:12px; --shadow:0 1px 3px rgba(60,30,10,.12);
+  --bg:#F3EEE6; --surface:#FFFFFF; --surface2:#EAE3D7; --text:#3A332C; --muted:#5E554B;
+  --primary:#A8401A; --primary-ink:#FFFFFF; --accent:#0059F1; --border:#D8CFC2;
+  --ok:#5B6B2E; --warn:#9A5B00; --bad:#B3261E; --ok-bg:#E9EEDB; --warn-bg:#FFF1D6; --bad-bg:#FBE3E1;
+  --focus:#0059F1; --fs:18px; --radius:12px; --shadow:0 1px 3px rgba(60,30,10,.12);
 }
 :root[data-theme="oscuro"]{
-  --bg:#1C1410; --surface:#2A1F18; --surface2:#35281F; --text:#F6EBDD; --muted:#CDB8A2;
-  --primary:#F0A060; --primary-ink:#1C1410; --accent:#E8B04A; --border:#5A4636;
-  --ok:#7CCB80; --warn:#F2C062; --bad:#FF8A80; --ok-bg:#1F3320; --warn-bg:#3D2E10; --bad-bg:#3F1C1A;
-  --focus:#8AB4FF; --shadow:0 1px 3px rgba(0,0,0,.5);
+  --bg:#23201C; --surface:#2E2A25; --surface2:#3A352E; --text:#F1EBE2; --muted:#CFC4B5;
+  --primary:#E8875A; --primary-ink:#23201C; --accent:#6FA0FF; --border:#5A5248;
+  --ok:#A8B86B; --warn:#F2C062; --bad:#FF8A80; --ok-bg:#2C3318; --warn-bg:#3D2E10; --bad-bg:#3F1C1A;
+  --focus:#6FA0FF; --shadow:0 1px 3px rgba(0,0,0,.5);
 }
 :root[data-theme="sol"]{ /* máximo contraste para pleno sol */
   --bg:#FFFFFF; --surface:#FFFFFF; --surface2:#FFF4E0; --text:#000000; --muted:#2B1D14;
-  --primary:#7A2600; --primary-ink:#FFFFFF; --accent:#7A4A00; --border:#000000;
-  --ok:#0B5D12; --warn:#6B3D00; --bad:#8E0B03; --ok-bg:#DDF3DD; --warn-bg:#FFE9B8; --bad-bg:#FFD6D2;
+  --primary:#7A2600; --primary-ink:#FFFFFF; --accent:#0040B0; --border:#000000;
+  --ok:#3E4A1E; --warn:#6B3D00; --bad:#8E0B03; --ok-bg:#DDF3DD; --warn-bg:#FFE9B8; --bad-bg:#FFD6D2;
   --focus:#0033CC; --shadow:none;
 }
 *{box-sizing:border-box}
@@ -96,6 +96,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .lock{border-left:6px solid var(--ok)}
 .draft{border-left:6px solid var(--accent)}
 #print{display:none}
+.mb{background:#0059F1;color:#FFFFFF;text-align:center;font-weight:800;padding:.35rem;letter-spacing:.03em}
 @media print{
   body *{visibility:hidden} #print,#print *{visibility:visible}
   #print{display:block;position:absolute;left:0;top:0;width:100%;color:#000;background:#fff;font-size:11pt}
@@ -117,6 +118,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 </header>
 <nav class="tabs" id="tabs" aria-label="Secciones">
   <button data-v="proyectos">Proyectos</button>
+  <button data-v="ordenes">Órdenes</button>
   <button data-v="visita">Visita</button>
   <button data-v="plantillas">Plantillas</button>
   <button data-v="datos">Datos y sincronía</button>
@@ -132,11 +134,11 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 <script>
 "use strict";
 /* =====================================================================
-   SUPERVISA·PE  v0.3.1  ·  Archivo único, sin servidor, costo cero
+   SUPERVISA·PE  v0.4.0  ·  Archivo único, sin servidor, costo cero
    Datos: IndexedDB del navegador (en el equipo). Sincronía: paquetes .json
    Fecha/hora: UTC-5 (Lima)  ·  Coordenadas: WGS84, 6 decimales
    ===================================================================== */
-const APP = { nombre:"SUPERVISA·PE", version:"0.3.1", esquema:1 };
+const APP = { nombre:"SUPERVISA·PE", version:"0.4.0", esquema:1 };
 
 /* ---------- utilidades ---------- */
 const $ = (s,el=document)=>el.querySelector(s);
@@ -178,9 +180,9 @@ function sha256js(bytes){
 function canon(o){ if(Array.isArray(o)) return "["+o.map(canon).join(",")+"]"; if(o&&typeof o==="object") return "{"+Object.keys(o).sort().map(k=>JSON.stringify(k)+":"+canon(o[k])).join(",")+"}"; return JSON.stringify(o); }
 
 /* ---------- Base de datos local (IndexedDB) ---------- */
-const STORES={proyectos:"uuid",visitas:"uuid",fotos:"uuid",plantillas:"id",bitacora:"id",config:"k"};
+const STORES={proyectos:"uuid",visitas:"uuid",fotos:"uuid",plantillas:"id",bitacora:"id",config:"k",ordenes:"uuid",tareas:"uuid",partes:"uuid",incidencias:"uuid",equipos:"id"};
 const DB={ db:null, mem:null,
-  open(){ return new Promise(res=>{ try{ const r=indexedDB.open("supervisa_pe",1);
+  open(){ return new Promise(res=>{ try{ const r=indexedDB.open(AMBIENTE==="pruebas"?"supervisa_pe_pruebas":"supervisa_pe",2);
       r.onupgradeneeded=()=>{ const db=r.result; for(const [s,k] of Object.entries(STORES)) if(!db.objectStoreNames.contains(s)) db.createObjectStore(s,{keyPath:k}); };
       r.onsuccess=()=>{ DB.db=r.result; res(true); };
       r.onerror=()=>{ DB.mem={}; for(const s in STORES) DB.mem[s]=new Map(); res(false); };
@@ -330,7 +332,7 @@ function calcular(v){ const prs=preguntasDe(v.plantillas||[]); let si=0,base=0,r
 function ir(v){ VISTA=v; $$("#tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.v===v?"page":"false")); render(); scrollTo(0,0); }
 $$("#tabs button").forEach(b=>b.onclick=()=>ir(b.dataset.v));
 async function render(){ if(typeof pintarSync==="function") pintarSync(); const f=$("#foot"); f.classList.add("hide"); f.innerHTML="";
-  const m={proyectos:vProyectos,proyecto:vProyecto,visita:vVisita,plantillas:vPlantillas,datos:vDatos,auditoria:vAuditoria,cuenta:vCuenta,ayuda:vAyuda}; await (m[VISTA]||vProyectos)(); }
+  const m={proyectos:vProyectos,proyecto:vProyecto,visita:vVisita,plantillas:vPlantillas,datos:vDatos,auditoria:vAuditoria,cuenta:vCuenta,ayuda:vAyuda,ordenes:vOrdenes,orden:vOrden}; await (m[VISTA]||vProyectos)(); }
 
 /* ================= VISTA: PROYECTOS ================= */
 async function vProyectos(){
@@ -637,6 +639,7 @@ function vAyuda(){ $("#app").innerHTML=`<div class="card"><h2>Cómo se usa (en 6
  <li><b>Exporte</b> el paquete .json y póngalo en la carpeta compartida para consolidar.</li></ol>
  <h3>Semáforo</h3><p><span class="pill s-ok">Conforme</span> 85 % o más · <span class="pill s-warn">Con observaciones</span> 60–84 % · <span class="pill s-bad">Crítico</span> menos de 60 % o cualquier pregunta crítica en “No”. El puntaje pondera cada pregunta (peso 1 a 3) y no cuenta las N.A.</p>
  <h3>Sin internet</h3><p>Todo funciona sin señal: fichas, visitas, fotos, GPS, informes y exportación. Solo necesitan internet: autocompletar desde CEPLAN, el mapa y los enlaces externos.</p>
+ <h3>Órdenes de trabajo</h3><p>En <b>Órdenes</b> ve los trabajos asignados a su equipo, ordenados por urgencia. Dentro de cada orden: inicie, pause o termine el trabajo; marque tareas; llene el <b>parte diario</b> (avance acumulado, actividades, personal, clima) y agréguele fotos; reporte <b>incidencias</b>. Todo funciona sin señal y se envía solo al volver la cobertura. La barra verde es el avance real y la línea oscura, lo que debería llevar hoy según el plan.</p>
  <h3>Cuenta y base central</h3><p>Ingrese en <b>Cuenta</b> con el correo y la contraseña que le dio el gerente (la primera vez necesita internet). Desde ahí sus proyectos, visitas, fotos y bitácora se envían solos a la base central cada vez que hay señal. El indicador ☁ de arriba muestra cuántos registros faltan subir; púlselo para sincronizar al instante.</p>
  <h3>Instalar en el celular</h3><p>Abra la dirección web de la app en Chrome y pulse <b>⤓ Instalar</b> (o menú ⋮ → <i>Instalar app</i>). Queda un ícono como cualquier app y abre sin internet. Cuando haya una versión nueva aparecerá el aviso <b>Actualizar</b>: sus datos no se pierden.</p>
  <h3>Dónde quedan los datos</h3><p>En el navegador de este equipo. <b>No borre los datos del navegador</b> sin antes exportar un paquete completo.</p>
@@ -650,7 +653,9 @@ function dlgUsuario(){ const d=$("#dlg"); $("#dlgBody").innerHTML=`<h2>Superviso
 
 /* ================= BASE CENTRAL (Supabase) · acceso y sincronización ================= */
 /* La clave publicable es pública por diseño: la seguridad real está en las reglas por fila de la base. */
-const CENTRAL={ url:"https://nxymbcwcitrcewrhsust.supabase.co", clave:"sb_publishable_G1977nXriJsz3vDy2TEtFw_UCB1ViwG" };
+const AMBIENTES={ real:{nombre:"Real (producción)",url:"https://nxymbcwcitrcewrhsust.supabase.co",clave:"sb_publishable_G1977nXriJsz3vDy2TEtFw_UCB1ViwG"}, pruebas:{nombre:"Marcha blanca (pruebas)",url:"https://ngitbosxpgnnohmtplos.supabase.co",clave:"sb_publishable_3bZX_hT_rkYjekPgquGJaw_r6WJ3eW1"} };
+const AMBIENTE=(()=>{ try{ return localStorage.getItem("supervisa_ambiente")==="pruebas"?"pruebas":"real"; }catch(e){ return "real"; } })();
+const CENTRAL=AMBIENTES[AMBIENTE];
 let SYNC_ACTIVO=false, SYNC_TIMER=null;
 const sesion=()=>CFG.sesion||null;
 const nz=v=>(v===""||v===undefined||v===null||isNaN(Number(v)))?null:Number(v);
@@ -675,7 +680,7 @@ async function cargarPerfil(){ const r=await authFetch(`/rest/v1/perfiles?id=eq.
 async function salir(){ const n=await pendientes(); if(n&&!confirm(`Hay ${n} registro(s) sin subir. Seguirán guardados en este equipo y subirán cuando vuelva a ingresar. ¿Cerrar sesión?`)) return;
   try{ await fetch(CENTRAL.url+"/auth/v1/logout",{method:"POST",headers:{apikey:CENTRAL.clave,Authorization:"Bearer "+sesion().access_token}}); }catch(e){}
   await log("SALIR","cuenta",""); await cfgSet("sesion",null); await cfgSet("perfil",null); pintarSync(); }
-async function pendientes(){ const [ps,vs,fs]=await Promise.all([DB.all("proyectos"),DB.all("visitas"),DB.all("fotos")]); return ps.filter(x=>!x.sincronizado).length+vs.filter(x=>!x.sincronizado).length+fs.filter(x=>!x.subida).length; }
+async function pendientes(){ const [ps,vs,fs,os,ts,pd,ic]=await Promise.all([DB.all("proyectos"),DB.all("visitas"),DB.all("fotos"),DB.all("ordenes"),DB.all("tareas"),DB.all("partes"),DB.all("incidencias")]); return ps.filter(x=>!x.sincronizado).length+vs.filter(x=>!x.sincronizado).length+fs.filter(x=>!x.subida).length+os.filter(x=>x.sincronizado===false).length+ts.filter(x=>x.sincronizado===false).length+pd.filter(x=>!x.sincronizado).length+ic.filter(x=>!x.sincronizado).length; }
 async function pintarSync(){ const el=$("#sync"); if(!el) return; if(!sesion()){ el.textContent="☁ Sin cuenta"; el.className="pill s-none"; el.title="Ingrese en Cuenta para sincronizar"; return; }
   if(SYNC_ACTIVO){ el.textContent="☁ Sincronizando…"; el.className="pill s-warn"; return; }
   const n=await pendientes(); el.textContent=n?`☁ ${n} por subir`:"☁ Al día"; el.className="pill "+(n?"s-warn":"s-ok"); el.title=CFG.ultima_sync?"Última sincronización: "+fmtFecha(CFG.ultima_sync):"Aún no sincroniza"; }
@@ -695,11 +700,12 @@ async function sincronizar(manual=false){
     const uid=sesion().uid;
     for(const p of (await DB.all("proyectos")).filter(x=>!x.sincronizado)){ const e=await subir("/rest/v1/proyectos?on_conflict=uuid",proyAServidor(p)); if(e) res.err.push(`Proyecto ${p.cui||p.nombre}: ${e}`); else { p.sincronizado=true; await DB.put("proyectos",p); res.sub++; } }
     for(const v of (await DB.all("visitas")).filter(x=>!x.sincronizado)){ const e=await subir("/rest/v1/visitas?on_conflict=uuid",visAServidor(v)); if(e) res.err.push(`Visita ${v.cui||""} N.° ${v.numero}: ${e}`); else { v.sincronizado=true; await DB.put("visitas",v); res.sub++; } }
+    await subirOT(res);
     for(const f of (await DB.all("fotos")).filter(x=>!x.subida)){
-      const ruta=`${uid}/${f.visita_uuid}/${f.uuid}.jpg`; const blob=await (await fetch(f.data)).blob();
+      const ruta=`${uid}/${f.visita_uuid||f.parte_uuid||f.incidencia_uuid}/${f.uuid}.jpg`; const blob=await (await fetch(f.data)).blob();
       const r=await authFetch(`/storage/v1/object/fotos/${ruta}`,{method:"POST",headers:{"Content-Type":"image/jpeg","x-upsert":"false"},body:blob});
       if(!r.ok){ const t2=await errTxt(r); if(!/exist|duplicate/i.test(t2)){ res.err.push("Foto: "+t2); continue; } }
-      const e=await subir("/rest/v1/fotos?on_conflict=uuid",{uuid:f.uuid,visita_uuid:f.visita_uuid,pregunta:f.pregunta||null,storage_path:ruta,fecha:tz(f.fecha),lat:nz(f.lat),lon:nz(f.lon),hash:f.hash||null,creado_por:f.creado_por||null,dispositivo:f.dispositivo||null},"resolution=ignore-duplicates,return=minimal");
+      const e=await subir("/rest/v1/fotos?on_conflict=uuid",{uuid:f.uuid,visita_uuid:f.visita_uuid||null,parte_uuid:f.parte_uuid||null,incidencia_uuid:f.incidencia_uuid||null,pregunta:f.pregunta||null,storage_path:ruta,fecha:tz(f.fecha),lat:nz(f.lat),lon:nz(f.lon),hash:f.hash||null,creado_por:f.creado_por||null,dispositivo:f.dispositivo||null},"resolution=ignore-duplicates,return=minimal");
       if(e) res.err.push("Foto: "+e); else { f.subida=true; f.storage_path=ruta; await DB.put("fotos",f); res.sub++; } }
     const bit=(await DB.all("bitacora")).filter(b=>!b.subida);
     if(bit.length){ const e=await subir("/rest/v1/bitacora?on_conflict=id",bit.map(b=>({id:b.id,ts:b.ts,usuario:b.usuario||null,dispositivo:b.dispositivo||null,accion:b.accion,entidad:b.entidad||null,ref:b.ref||null,detalle:b.detalle||null})),"resolution=ignore-duplicates,return=minimal");
@@ -714,20 +720,21 @@ async function sincronizar(manual=false){
           if(tabla==="visitas"&&loc.estado==="CERRADA"&&inc.estado!=="CERRADA"&&!reabre) continue;
           if(!reabre&&cmpF(inc.fecha_modificacion,loc.fecha_modificacion)<=0&&loc.sincronizado) continue; }
         await DB.put(tabla,inc); res.baj++; } }
+    await bajarOT(res);
     const rp=await authFetch("/rest/v1/plantillas?select=*"); if(rp.ok){ for(const s of await rp.json()){ const loc=PLANT_CACHE.find(x=>x.id===s.id); if(!loc||String(s.version)>String(loc.version)){ await DB.put("plantillas",{...s.contenido,subida:true,importada:s.fecha}); res.baj++; } } await cargarPlantillas(); }
     await cfgSet("ultima_bajada",maxTs); await cfgSet("ultima_sync",isoLima());
     if(res.sub||res.baj) await log("SINCRONIZAR","central","",`${res.sub} subidos, ${res.baj} recibidos`);
   }catch(e){ res.err.push(e.message); }
   SYNC_ACTIVO=false; await cfgSet("ultimo_error_sync",res.err.slice(0,5).join(" | ")); await pintarSync();
   if(manual||res.err.length) toast(res.err.length?("⚠ "+res.err[0]):`Sincronizado ✔ ${res.sub} subidos · ${res.baj} recibidos`,4500);
-  if(res.baj&&["proyectos","proyecto"].includes(VISTA)) render();
+  if(res.baj&&["proyectos","proyecto","ordenes","orden"].includes(VISTA)) render();
   return res; }
 function iniciarCentral(){ pintarSync(); $("#sync").onclick=()=>sincronizar(true);
   addEventListener("online",()=>setTimeout(()=>sincronizar(false),3000));
   setInterval(()=>{ if(document.visibilityState==="visible") sincronizar(false); },5*60*1000); setInterval(pintarSync,15000);
   if(sesion()&&navigator.onLine) setTimeout(()=>sincronizar(false),1500); }
 async function vCuenta(){ const s=sesion(); const p=CFG.perfil;
-  if(!s){ $("#app").innerHTML=`<div class="card"><h2>Ingresar a la base central</h2><p class="muted">Use el correo y la contraseña que le entregó el gerente. La primera vez necesita internet; luego la app sigue funcionando sin señal y envía sus datos sola cuando hay cobertura.</p>
+  if(!s){ $("#app").innerHTML=`${htmlAmbiente()}<div class="card"><h2>Ingresar a la base central</h2><p class="muted">Use el correo y la contraseña que le entregó el gerente. La primera vez necesita internet; luego la app sigue funcionando sin señal y envía sus datos sola cuando hay cobertura.</p>
     <label class="f" for="lEm">Correo</label><input type="text" id="lEm" inputmode="email" autocomplete="username" value="${esc(CFG.ultimo_correo||"")}">
     <label class="f" for="lPw">Contraseña</label><input type="password" id="lPw" autocomplete="current-password">
     <p class="row"><button class="btn" id="lOk">Ingresar</button><button class="btn ghost" id="lVer">Ver contraseña</button></p><div id="lMsg" class="muted"></div>
@@ -738,7 +745,7 @@ async function vCuenta(){ const s=sesion(); const p=CFG.perfil;
         if(per&&per.activo){ toast("Bienvenido(a), "+(per.nombre||em)); sincronizar(true); } vCuenta(); }catch(e){ $("#lMsg").textContent="✖ "+e.message; } };
     return; }
   const n=await pendientes();
-  $("#app").innerHTML=`<div class="card"><h2>Cuenta</h2>
+  $("#app").innerHTML=`${htmlAmbiente()}<div class="card"><h2>Cuenta</h2>
    <p><b>${esc((p&&p.nombre)||CFG.usuario||"")}</b> · ${esc(s.email||"")}</p>
    <p>Rol: <span class="pill s-none">${esc((p&&p.rol)||"—")}</span> ${p&&p.region?"· Región: "+esc(p.region):""} · Estado: ${p&&p.activo?'<span class="pill s-ok">Activa</span>':'<span class="pill s-bad">Pendiente de activación por el gerente</span>'}</p>
    <p>Registros por subir: <b>${n}</b> · Última sincronización: ${CFG.ultima_sync?fmtFecha(CFG.ultima_sync):"—"}</p>
@@ -747,6 +754,170 @@ async function vCuenta(){ const s=sesion(); const p=CFG.perfil;
    <p class="muted">La sincronización es automática cuando hay señal. Las visitas cerradas llegan selladas y nadie puede alterarlas en la base central.</p></div>`;
   $("#cSync").onclick=async()=>{ await sincronizar(true); vCuenta(); };
   $("#cSalir").onclick=async()=>{ await salir(); vCuenta(); }; }
+
+/* ================= ÓRDENES DE TRABAJO (campo) · v0.4.0 ================= */
+const EST_OT={ASIGNADA:"s-none",EN_CURSO:"s-warn",PAUSADA:"s-none",TERMINADA:"s-ok",ENTREGADA:"s-ok",ANULADA:"s-none"};
+const EST_OT_TXT={ASIGNADA:"Asignada",EN_CURSO:"En curso",PAUSADA:"Pausada",TERMINADA:"Terminada",ENTREGADA:"Entregada",ANULADA:"Anulada"};
+const TIPOS_INC={atraso:"Atraso",falta_material:"Falta de material",clima:"Clima",seguridad:"Seguridad",acceso:"Acceso",tecnica:"Técnica",social:"Social",otro:"Otro"};
+const CLIMAS=["Soleado","Nublado","Lluvia ligera","Lluvia intensa","Viento fuerte","Neblina"];
+let OT_SEL=null, OT_FILTRO="todas";
+const hoyLima=()=>new Date(Date.now()-5*3600e3).toISOString().slice(0,10);
+const fmtD=d=>d?d.split("-").reverse().join("/"):"—";
+function avancePlan(o){ if(!o.fecha_inicio_plan||!o.fecha_fin_plan) return null; const i=Date.parse(o.fecha_inicio_plan+"T00:00:00Z"), f=Date.parse(o.fecha_fin_plan+"T00:00:00Z"), h=Date.parse(hoyLima()+"T00:00:00Z"); if(!(f>i)) return null; return Math.max(0,Math.min(100,Math.round((h-i)*1000/(f-i))/10)); }
+function alertaOT(o,incAb){ const pl=avancePlan(o), real=Number(o.avance_real||0), d=pl==null?null:Math.round((real-pl)*10)/10;
+  const sinRep=o.estado==="EN_CURSO"&&(!o.ultimo_parte||o.ultimo_parte<hoyLima()); let nivel="s-ok",txt="Al día";
+  if(["TERMINADA","ENTREGADA"].includes(o.estado)){ nivel="s-ok"; txt=EST_OT_TXT[o.estado]; }
+  else if((d!=null&&d<-10)||(o.fecha_fin_plan&&o.fecha_fin_plan<hoyLima())){ nivel="s-bad"; txt="Atrasada"; }
+  else if((d!=null&&d<-3)||incAb>0||sinRep){ nivel="s-warn"; txt=sinRep?"Sin parte hoy":incAb?"Con incidencias":"Leve atraso"; }
+  return {pl,d,real,nivel,txt,sinRep}; }
+function barraAvance(real,plan){ return `<div class="bar" style="position:relative;height:16px" title="Real ${Math.round(real)} % · Plan ${plan==null?"—":plan+" %"}"><i style="width:${Math.max(0,Math.min(100,real))}%;background:var(--ok)"></i>${plan!=null?`<span style="position:absolute;top:-4px;bottom:-4px;left:${plan}%;border-left:3px solid var(--text)"></span>`:""}</div>
+  <div class="muted" style="font-size:.78rem">Barra verde = avance real · línea oscura = avance que debería llevar hoy según el plan</div>`; }
+function difTxt(d){ return d==null?"—":`<b style="color:${d<0?"var(--bad)":"var(--ok)"}">${d>0?"+":""}${d} pp</b>`; }
+async function incAbiertas(){ const m={}; for(const i of await DB.all("incidencias")) if(i.estado!=="CERRADA") m[i.orden_uuid]=(m[i.orden_uuid]||0)+1; return m; }
+
+/* ---------- lista de órdenes ---------- */
+async function vOrdenes(){
+  const os=(await DB.all("ordenes")).filter(o=>o.estado!=="ANULADA"); const eqs=await DB.all("equipos"); const ia=await incAbiertas();
+  if(!os.length){ $("#app").innerHTML=`<div class="card"><h2>Órdenes de trabajo</h2><p>${sesion()?"Aún no tiene órdenes asignadas. Cuando el gerente o coordinador asigne un trabajo a su equipo, aparecerá aquí al sincronizar (☁).":"Ingrese con su cuenta en <b>Cuenta</b> para recibir las órdenes de trabajo de su equipo."}</p>
+     ${sesion()?'<button class="btn" id="oSync">☁ Sincronizar ahora</button>':'<button class="btn" id="oCta">Ingresar</button>'}</div>`;
+    $("#oSync")&&($("#oSync").onclick=()=>sincronizar(true)); $("#oCta")&&($("#oCta").onclick=()=>ir("cuenta")); return; }
+  const filas=os.map(o=>({o,ia:ia[o.uuid]||0,a:alertaOT(o,ia[o.uuid]||0),eq:(eqs.find(e=>e.id===o.equipo_id)||{}).nombre||""}));
+  const ord={"s-bad":0,"s-warn":1,"s-none":2,"s-ok":3}; filas.sort((x,y)=>ord[x.a.nivel]-ord[y.a.nivel]||(x.o.codigo||"").localeCompare(y.o.codigo||""));
+  const pasa=(f,k)=>k==="todas"||(k==="curso"&&f.o.estado==="EN_CURSO")||(k==="atrasadas"&&f.a.nivel==="s-bad")||(k==="terminadas"&&["TERMINADA","ENTREGADA"].includes(f.o.estado));
+  const q=($("#oBuscar")||{}).value||"";
+  const vis=filas.filter(f=>pasa(f,OT_FILTRO)&&`${f.o.codigo} ${f.o.titulo} ${f.o.provincia} ${f.o.distrito} ${f.o.centro_poblado||""} ${f.eq}`.toLowerCase().includes(q.toLowerCase()));
+  $("#app").innerHTML=`<div class="kpis" role="group" aria-label="Filtrar órdenes">${[["todas","Órdenes"],["curso","En curso"],["atrasadas","Atrasadas"],["terminadas","Terminadas"]].map(([k,t])=>`<div class="kpi" role="button" tabindex="0" data-f="${k}" aria-pressed="${OT_FILTRO===k}"><span class="muted">${t}</span><b>${filas.filter(f=>pasa(f,k)).length}</b></div>`).join("")}</div>
+   <div class="row" style="margin-top:.7rem"><input type="search" id="oBuscar" class="grow" placeholder="Buscar por código, puente, distrito, equipo…" value="${esc(q)}"><button class="btn sec" id="oCsv">Partes a Excel</button></div>
+   ${vis.map(f=>`<div class="card proj ot" data-u="${f.o.uuid}" tabindex="0">
+     <div class="row" style="justify-content:space-between"><b>${esc(f.o.codigo)} · ${esc(f.o.titulo)}</b><span><span class="pill ${EST_OT[f.o.estado]}">${EST_OT_TXT[f.o.estado]}</span> <span class="pill ${f.a.nivel}">${f.a.txt}</span></span></div>
+     <div class="muted">${esc([f.o.distrito,f.o.provincia].filter(Boolean).join(", "))} · ${esc(f.eq)} · plan ${fmtD(f.o.fecha_inicio_plan)} → ${fmtD(f.o.fecha_fin_plan)}</div>
+     ${barraAvance(f.a.real,f.a.pl)}
+     <div class="muted">Real ${Math.round(f.a.real)} % · Plan ${f.a.pl==null?"—":f.a.pl+" %"} · ΔPL ${difTxt(f.a.d)} · último parte ${fmtD(f.o.ultimo_parte)}${f.ia?` · <b style="color:var(--bad)">${f.ia} incidencia(s) abierta(s)</b>`:""}</div></div>`).join("")||'<div class="card muted">Sin órdenes con este filtro.</div>'}`;
+  $$(".kpi[data-f]").forEach(k=>{ const fn=()=>{ OT_FILTRO=k.dataset.f; vOrdenes(); }; k.onclick=fn; k.onkeydown=e=>{ if(e.key==="Enter"||e.key===" ") fn(); }; });
+  $("#oBuscar").oninput=()=>{ const p=$("#oBuscar").selectionStart; vOrdenes().then(()=>{ const b=$("#oBuscar"); b.focus(); b.setSelectionRange(p,p); }); };
+  $("#oCsv").onclick=()=>exportarPartes(null);
+  $$(".ot").forEach(c=>{ const fn=()=>{ OT_SEL=c.dataset.u; ir("orden"); }; c.onclick=fn; c.onkeydown=e=>{ if(e.key==="Enter") fn(); }; }); }
+
+/* ---------- detalle de una orden ---------- */
+async function vOrden(){
+  const o=await DB.get("ordenes",OT_SEL); if(!o){ ir("ordenes"); return; }
+  const [ts,ps,is,fs,eqs]=await Promise.all([DB.all("tareas"),DB.all("partes"),DB.all("incidencias"),DB.all("fotos"),DB.all("equipos")]);
+  const tareas=ts.filter(t=>t.orden_uuid===o.uuid&&t.estado!=="ANULADA").sort((a,b)=>(a.fecha_limite||"").localeCompare(b.fecha_limite||""));
+  const partes=ps.filter(p=>p.orden_uuid===o.uuid).sort((a,b)=>b.fecha.localeCompare(a.fecha)||String(b.fecha_creacion||"").localeCompare(String(a.fecha_creacion||"")));
+  const incs=is.filter(i=>i.orden_uuid===o.uuid).sort((a,b)=>String(b.fecha||"").localeCompare(String(a.fecha||"")));
+  const iab=incs.filter(i=>i.estado!=="CERRADA").length, a=alertaOT(o,iab), eq=(eqs.find(e=>e.id===o.equipo_id)||{}).nombre||"";
+  const capa=(CFG.capas||[]).find(c=>c.id===o.capa_id); const cerrada=["ENTREGADA","ANULADA"].includes(o.estado);
+  const yo=(sesion()||{}).uid; const hoy=hoyLima();
+  const miParte=partes.find(p=>p.fecha===hoy&&((yo&&p.usuario_id===yo)||(!p.usuario_id&&p.creado_por===CFG.usuario)));
+  const ultimo=partes.length?Math.max(...partes.map(p=>Number(p.avance_acumulado)||0)):0;
+  const fotosDe=(k,u)=>fs.filter(f=>f[k]===u);
+  const atr=o.atributos||{};
+  $("#app").innerHTML=`<p><a href="#" id="volver">← Mis órdenes</a></p>
+  <div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">${esc(o.codigo)} · ${esc(o.titulo)}</h2><span><span class="pill ${EST_OT[o.estado]}">${EST_OT_TXT[o.estado]}</span> <span class="pill ${a.nivel}">${a.txt}</span></span></div>
+   <div class="muted">${esc([o.centro_poblado,o.distrito,o.provincia,o.departamento].filter(Boolean).join(", "))} · ${esc(eq)} · prioridad <b>${esc(o.prioridad)}</b> · ${esc(o.tipo_trabajo)}</div>
+   ${o.descripcion?`<p>${esc(o.descripcion)}</p>`:""}
+   <div class="row">${o.lat?`<a class="btn ghost" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${Number(o.lat).toFixed(6)},${Number(o.lon).toFixed(6)}">🧭 Cómo llegar</a>`:""}${capa&&capa.id_geoperu?`<a class="btn ghost" target="_blank" rel="noopener" href="${VISOR_GEOPERU}${encodeURIComponent(capa.id_geoperu)}">GEOPERÚ · ${esc(capa.nombre)}</a>`:""}</div>
+   <h3>Avance</h3>${barraAvance(a.real,a.pl)}
+   <p>Real <b>${Math.round(a.real)} %</b> · Plan hoy ${a.pl==null?"—":a.pl+" %"} · ΔPL ${difTxt(a.d)} · Plan ${fmtD(o.fecha_inicio_plan)} → ${fmtD(o.fecha_fin_plan)} · Último parte ${fmtD(o.ultimo_parte)}</p>
+   ${cerrada?`<p class="pill s-ok">Orden ${EST_OT_TXT[o.estado].toLowerCase()}: solo lectura</p>`:`<div class="row">
+     ${["ASIGNADA","PAUSADA"].includes(o.estado)?'<button class="btn" data-e="EN_CURSO">▶ Iniciar / reanudar</button>':""}
+     ${o.estado==="EN_CURSO"?'<button class="btn ghost" data-e="PAUSADA">⏸ Pausar</button><button class="btn sec" data-e="TERMINADA">✔ Marcar terminada</button>':""}</div>`}
+   ${Object.keys(atr).length?`<details style="margin-top:.5rem"><summary class="muted">Ficha de la capa (${esc(capa?capa.nombre:"origen")})</summary><table class="t">${Object.entries(atr).map(([k,v])=>`<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</table></details>`:""}
+  </div>
+  ${cerrada?"":`<div class="card" id="cParte"><h3>📝 Parte diario · ${fmtD(hoy)} ${miParte?'<span class="pill s-warn">editando el de hoy</span>':""}</h3>
+   <div class="row"><div class="grow"><label class="f" for="pAv">Avance acumulado de la obra (%)</label><input type="number" id="pAv" min="0" max="100" step="1" inputmode="numeric" value="${esc(miParte?miParte.avance_acumulado:ultimo)}"></div>
+   <div class="grow"><label class="f" for="pPers">Personal en obra</label><input type="number" id="pPers" min="0" inputmode="numeric" value="${esc(miParte?miParte.personal??"":"")}"></div>
+   <div class="grow"><label class="f" for="pHor">Horas trabajadas</label><input type="number" id="pHor" min="0" step="0.5" inputmode="decimal" value="${esc(miParte?miParte.horas??"":"8")}"></div></div>
+   <div class="muted">Último avance registrado: ${ultimo} %</div>
+   <label class="f" for="pAct">Actividades realizadas hoy</label><textarea id="pAct">${esc(miParte?miParte.actividades:"")}</textarea>
+   <div class="row"><div class="grow"><label class="f" for="pMat">Materiales usados</label><input type="text" id="pMat" value="${esc(miParte?miParte.materiales:"")}"></div>
+   <div class="grow"><label class="f" for="pCli">Clima</label><select id="pCli">${CLIMAS.map(c=>`<option ${miParte&&miParte.clima===c?"selected":""}>${c}</option>`).join("")}</select></div></div>
+   <label class="f" for="pObs">Observaciones / problemas</label><textarea id="pObs" style="min-height:3rem">${esc(miParte?miParte.observaciones:"")}</textarea>
+   <p class="row"><button class="btn" id="pOk">Guardar parte</button>${miParte?`<button class="btn ghost" data-foto="parte_uuid" data-u="${miParte.uuid}">📷 Foto del parte (${fotosDe("parte_uuid",miParte.uuid).length})</button>`:""}</p>
+   ${miParte?`<div class="thumbs">${fotosDe("parte_uuid",miParte.uuid).map(f=>`<img src="${f.data}" alt="Foto del parte">`).join("")}</div>`:'<p class="muted">Después de guardar el parte podrá agregarle fotos.</p>'}</div>`}
+  <div class="card"><h3>Tareas (${tareas.filter(t=>t.estado==="HECHA").length}/${tareas.length} hechas)</h3>
+   ${tareas.map(t=>`<div class="q" data-t="${t.uuid}"><div class="t">${esc(t.descripcion)}</div><div class="meta">Plazo ${fmtD(t.fecha_limite)} · ${t.responsable_id&&t.responsable_id===yo?"<b>asignada a usted</b>":"del equipo"}</div>
+     <div class="ans">${[["PENDIENTE","Pendiente","na"],["EN_CURSO","En curso","si"],["HECHA","Hecha","si"]].map(([k,tx,cl])=>`<button class="${cl}" data-v="${k}" aria-pressed="${t.estado===k}" ${cerrada?"disabled":""}>${tx}</button>`).join("")}</div></div>`).join("")||'<p class="muted">Sin tareas registradas.</p>'}</div>
+  <div class="card"><h3>Incidencias (${iab} abiertas)</h3>
+   ${incs.map(i=>`<div class="q"><div class="row" style="justify-content:space-between"><b>${esc(TIPOS_INC[i.tipo]||i.tipo)} · gravedad ${esc(i.gravedad)}</b><span class="pill ${i.estado==="CERRADA"?"s-ok":i.gravedad==="alta"?"s-bad":"s-warn"}">${esc(i.estado)}</span></div>
+     <div>${esc(i.descripcion)}</div><div class="meta">${esc(i.autor||"")} · ${fmtFecha(i.fecha)}${i.respuesta?` · respuesta: ${esc(i.respuesta)}`:""}</div>
+     <div class="thumbs">${fotosDe("incidencia_uuid",i.uuid).map(f=>`<img src="${f.data}" alt="Foto de incidencia">`).join("")}</div>
+     ${cerrada||i.estado==="CERRADA"?"":`<div class="row"><button class="btn ghost" data-foto="incidencia_uuid" data-u="${i.uuid}">📷 Foto</button><button class="btn ghost iCerrar" data-u="${i.uuid}">Marcar atendida</button></div>`}</div>`).join("")||'<p class="muted">Sin incidencias.</p>'}
+   ${cerrada?"":`<details class="sec" style="margin-top:.6rem"><summary>⚠ Reportar incidencia</summary><div class="q">
+     <div class="row"><div class="grow"><label class="f" for="iTipo">Tipo</label><select id="iTipo">${Object.entries(TIPOS_INC).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select></div>
+     <div class="grow"><label class="f" for="iGrav">Gravedad</label><select id="iGrav"><option value="alta">Alta</option><option value="media" selected>Media</option><option value="baja">Baja</option></select></div></div>
+     <label class="f" for="iDesc">Qué pasó (qué, dónde, desde cuándo)</label><textarea id="iDesc"></textarea>
+     <p><button class="btn danger" id="iOk">Reportar incidencia</button></p></div></details>`}</div>
+  <div class="card"><h3>Historial de partes (${partes.length})</h3><p><button class="btn sec" id="pCsv">Partes de esta orden a Excel</button></p>
+   <div class="scroll"><table class="t"><tr><th>Fecha</th><th>Autor</th><th>Avance</th><th>Actividades</th><th>Clima</th><th>Personal</th><th>Fotos</th></tr>
+   ${partes.map(p=>`<tr><td>${fmtD(p.fecha)}</td><td>${esc(p.autor||"")}</td><td>${esc(p.avance_acumulado)} %</td><td>${esc(p.actividades||"")}${p.observaciones?`<div class="muted">${esc(p.observaciones)}</div>`:""}</td><td>${esc(p.clima||"")}</td><td>${esc(p.personal??"")}</td><td>${fotosDe("parte_uuid",p.uuid).length}</td></tr>`).join("")}</table></div></div>`;
+  $("#volver").onclick=e=>{ e.preventDefault(); ir("ordenes"); };
+  $$("[data-e]").forEach(b=>b.onclick=()=>cambiarEstadoOT(o,b.dataset.e,ultimo));
+  $$("[data-t] .ans button").forEach(b=>b.onclick=async()=>{ const t=tareas.find(x=>x.uuid===b.closest("[data-t]").dataset.t); t.estado=b.dataset.v; t.avance={PENDIENTE:0,EN_CURSO:50,HECHA:100}[t.estado]; audMod(t); await DB.put("tareas",t); await log("TAREA","orden",o.uuid,`${t.descripcion} → ${t.estado}`); vOrden(); });
+  $$("[data-foto]").forEach(b=>b.onclick=()=>fotoPara(b.dataset.foto,b.dataset.u));
+  $$(".iCerrar").forEach(b=>b.onclick=async()=>{ const r=prompt("¿Cómo se atendió? (queda registrado)"); if(!r) return; const i=incs.find(x=>x.uuid===b.dataset.u); i.estado="CERRADA"; i.respuesta=r; i.cerrado_por=CFG.usuario; i.fecha_cierre=isoLima(); audMod(i); await DB.put("incidencias",i); await log("INCIDENCIA_CERRADA","orden",o.uuid,r); vOrden(); });
+  $("#pCsv").onclick=()=>exportarPartes(o.uuid);
+  $("#pOk")&&($("#pOk").onclick=async()=>{ const av=Number($("#pAv").value); if(isNaN(av)||av<0||av>100) return toast("El avance debe estar entre 0 y 100");
+    if(!$("#pAct").value.trim()) return toast("Describa las actividades del día");
+    if(av<ultimo&&(!miParte||Number(miParte.avance_acumulado)!==ultimo)&&!confirm(`El avance ingresado (${av} %) es menor al último registrado (${ultimo} %). ¿Confirmar?`)) return;
+    const pos=await gpsRapido(); const t=isoLima();
+    const p=miParte||{uuid:uuid(),orden_uuid:o.uuid,fecha:hoy,creado_por:CFG.usuario,fecha_creacion:t,dispositivo:CFG.dispositivo,usuario_id:yo||null};
+    Object.assign(p,{autor:CFG.usuario,avance_acumulado:av,actividades:$("#pAct").value.trim(),personal:$("#pPers").value===""?null:Number($("#pPers").value),horas:$("#pHor").value===""?null:Number($("#pHor").value),
+      materiales:$("#pMat").value.trim(),clima:$("#pCli").value,observaciones:$("#pObs").value.trim()});
+    if(pos){ p.lat=Number(pos.latitude.toFixed(6)); p.lon=Number(pos.longitude.toFixed(6)); p.precision_m=Math.round(pos.accuracy); }
+    audMod(p); await DB.put("partes",p);
+    o.avance_real=av; o.ultimo_parte=hoy; if(o.estado==="ASIGNADA") o.estado="EN_CURSO"; await DB.put("ordenes",o);
+    await log("PARTE","orden",o.uuid,`${o.codigo} · ${av} %`); toast("Parte guardado ✔ · ahora puede agregar fotos"); vOrden(); });
+  $("#iOk")&&($("#iOk").onclick=async()=>{ const d=$("#iDesc").value.trim(); if(d.length<5) return toast("Describa la incidencia"); const pos=await gpsRapido();
+    const i={uuid:uuid(),orden_uuid:o.uuid,tipo:$("#iTipo").value,gravedad:$("#iGrav").value,descripcion:d,estado:"ABIERTA",autor:CFG.usuario,fecha:isoLima(),lat:pos?Number(pos.latitude.toFixed(6)):"",lon:pos?Number(pos.longitude.toFixed(6)):"",dispositivo:CFG.dispositivo,usuario_id:yo||null};
+    audMod(i); await DB.put("incidencias",i); await log("INCIDENCIA","orden",o.uuid,`${i.tipo} · ${i.gravedad}`); toast("Incidencia reportada ✔ · puede agregar una foto"); vOrden(); });
+}
+function gpsRapido(){ return new Promise(r=>{ if(!navigator.geolocation) return r(null); navigator.geolocation.getCurrentPosition(p=>r(p.coords),()=>r(null),{enableHighAccuracy:true,timeout:8000,maximumAge:60000}); }); }
+async function cambiarEstadoOT(o,nuevo,ultimo){
+  if(nuevo==="TERMINADA"&&ultimo<100&&!confirm(`El último avance registrado es ${ultimo} %. ¿Marcar la orden como terminada de todos modos?`)) return;
+  if(nuevo==="PAUSADA"&&!confirm("¿Pausar la orden? Reporte una incidencia si la pausa se debe a un problema.")) return;
+  o.estado=nuevo; audMod(o); await DB.put("ordenes",o); await log("ESTADO_ORDEN","orden",o.uuid,`${o.codigo} → ${nuevo}`); toast(`Orden ${EST_OT_TXT[nuevo].toLowerCase()} ✔`); vOrden(); }
+function fotoPara(campo,id){ const i=document.createElement("input"); i.type="file"; i.accept="image/*"; i.capture="environment";
+  i.onchange=async()=>{ const file=i.files[0]; if(!file) return; const data=await comprimir(file); const pos=await gpsRapido();
+    const ft={uuid:uuid(),[campo]:id,pregunta:null,data,fecha:isoLima(),lat:pos?Number(pos.latitude.toFixed(6)):"",lon:pos?Number(pos.longitude.toFixed(6)):"",hash:await sha256(data),...audNuevo()};
+    await DB.put("fotos",ft); await log("FOTO",campo==="parte_uuid"?"parte":"incidencia",id,""); toast("Foto guardada ✔"); if(VISTA==="orden") vOrden(); };
+  i.click(); }
+async function exportarPartes(ordenUuid){ const [os,ps]=await Promise.all([DB.all("ordenes"),DB.all("partes")]);
+  const filas=[["Orden","Trabajo","Provincia","Distrito","Fecha","Autor","Avance_%","Actividades","Personal","Horas","Materiales","Clima","Observaciones","Latitud","Longitud","Sincronizado"]];
+  for(const p of ps.filter(x=>!ordenUuid||x.orden_uuid===ordenUuid).sort((a,b)=>a.fecha.localeCompare(b.fecha))){ const o=os.find(x=>x.uuid===p.orden_uuid)||{};
+    filas.push([o.codigo,o.titulo,o.provincia,o.distrito,fmtD(p.fecha),p.autor,p.avance_acumulado,p.actividades,p.personal,p.horas,p.materiales,p.clima,p.observaciones,c6(p.lat),c6(p.lon),p.sincronizado?"SI":"NO"]); }
+  if(filas.length===1) return toast("No hay partes para exportar"); csvDescargar(`SUPERVISA_partes_${ordenUuid?(os.find(x=>x.uuid===ordenUuid)||{}).codigo:"todas"}_${stamp()}.csv`,filas);
+  toast("Archivo listo: ábralo con Excel o impórtelo en Google Sheets (Archivo → Importar)",5000); }
+
+/* ---------- sincronización de órdenes ---------- */
+async function subirOT(res){
+  const patch=async(tabla,u,body)=>{ const r=await authFetch(`/rest/v1/${tabla}?uuid=eq.${u}`,{method:"PATCH",headers:{"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(body)}); return r.ok?null:await errTxt(r); };
+  for(const o of (await DB.all("ordenes")).filter(x=>x.sincronizado===false)){ const e=await patch("ordenes",o.uuid,{estado:o.estado,modificado_por:o.modificado_por||CFG.usuario,fecha_modificacion:tz(o.fecha_modificacion)}); if(e) res.err.push(`Orden ${o.codigo}: ${e}`); else { o.sincronizado=true; await DB.put("ordenes",o); res.sub++; } }
+  for(const t of (await DB.all("tareas")).filter(x=>x.sincronizado===false)){ const e=await patch("tareas",t.uuid,{estado:t.estado,avance:t.avance,modificado_por:t.modificado_por||CFG.usuario,fecha_modificacion:tz(t.fecha_modificacion)}); if(e) res.err.push(`Tarea: ${e}`); else { t.sincronizado=true; await DB.put("tareas",t); res.sub++; } }
+  for(const p of (await DB.all("partes")).filter(x=>!x.sincronizado)){ const e=await subir("/rest/v1/partes_diarios?on_conflict=uuid",{uuid:p.uuid,orden_uuid:p.orden_uuid,fecha:p.fecha,autor:p.autor||null,avance_acumulado:nz(p.avance_acumulado),actividades:p.actividades||null,personal:nz(p.personal),horas:nz(p.horas),materiales:p.materiales||null,clima:p.clima||null,observaciones:p.observaciones||null,lat:nz(p.lat),lon:nz(p.lon),precision_m:nz(p.precision_m),creado_por:p.creado_por||null,fecha_creacion:tz(p.fecha_creacion),modificado_por:p.modificado_por||null,fecha_modificacion:tz(p.fecha_modificacion),dispositivo:p.dispositivo||null});
+    if(e) res.err.push(`Parte ${fmtD(p.fecha)}: ${e}`); else { p.sincronizado=true; await DB.put("partes",p); res.sub++; } }
+  for(const i of (await DB.all("incidencias")).filter(x=>!x.sincronizado)){ const e=await subir("/rest/v1/incidencias?on_conflict=uuid",{uuid:i.uuid,orden_uuid:i.orden_uuid,tipo:i.tipo,gravedad:i.gravedad,descripcion:i.descripcion,estado:i.estado,respuesta:i.respuesta||null,autor:i.autor||null,fecha:tz(i.fecha),lat:nz(i.lat),lon:nz(i.lon),cerrado_por:i.cerrado_por||null,fecha_cierre:tz(i.fecha_cierre),fecha_modificacion:tz(i.fecha_modificacion),dispositivo:i.dispositivo||null});
+    if(e) res.err.push(`Incidencia: ${e}`); else { i.sincronizado=true; await DB.put("incidencias",i); res.sub++; } } }
+async function bajarOT(res){
+  try{ const desde=CFG.ultima_bajada_ot||""; let maxTs=desde;
+    for(const [tabla,store] of [["ordenes","ordenes"],["tareas","tareas"],["partes_diarios","partes"],["incidencias","incidencias"]]){
+      for(const s of await bajarTodo(tabla,desde)){ if(!maxTs||s.servidor_actualizado>maxTs) maxTs=s.servidor_actualizado;
+        const loc=await DB.get(store,s.uuid); if(loc&&loc.sincronizado===false&&cmpF(loc.fecha_modificacion,s.fecha_modificacion)>0) continue;
+        const inc={...s,sincronizado:true}; if(store!=="tareas"){ inc.lat=s.lat==null?"":Number(s.lat); inc.lon=s.lon==null?"":Number(s.lon); }
+        await DB.put(store,inc); res.baj++; } }
+    const r=await authFetch("/rest/v1/equipos?select=id,nombre,region,lider_id"); if(r.ok) for(const e of await r.json()) await DB.put("equipos",e);
+    const rc=await authFetch("/rest/v1/capas_catalogo?select=id,nombre,entidad,id_geoperu,url,capa_nombre&activa=eq.true"); if(rc.ok) await cfgSet("capas",await rc.json());
+    await cfgSet("ultima_bajada_ot",maxTs);
+  }catch(e){ if(!/does not exist|Could not find|PGRST20|schema cache|404/i.test(e.message)) res.err.push(e.message); } }
+
+/* ---------- ambiente (real / marcha blanca) ---------- */
+function htmlAmbiente(){ const otro=AMBIENTE==="real"?"pruebas":"real"; return `<div class="card" style="border-color:var(--accent)"><b>Ambiente:</b> ${esc(CENTRAL.nombre)} <span class="muted">· los datos de cada ambiente se guardan por separado en este equipo</span>
+  <div class="row" style="margin-top:.4rem"><button class="btn ghost" id="cAmb" data-a="${otro}">Cambiar a ${esc(AMBIENTES[otro].nombre)}</button></div></div>`; }
+document.addEventListener("click",e=>{ const b=e.target.closest&&e.target.closest("#cAmb"); if(!b) return;
+  if(!confirm(`¿Cambiar al ambiente «${AMBIENTES[b.dataset.a].nombre}»? La app se recargará. Lo que ya está en este equipo se conserva en su propio ambiente.`)) return;
+  try{ localStorage.setItem("supervisa_ambiente",b.dataset.a); }catch(er){} location.reload(); });
+function iniciarOT(){ if(AMBIENTE==="pruebas"){ const d=document.createElement("div"); d.className="mb"; d.textContent="MARCHA BLANCA · ambiente de pruebas · datos ficticios"; document.body.insertBefore(d,document.body.firstChild); }
+  DB.all("ordenes").then(os=>{ if(os.length&&VISTA==="proyectos") ir("ordenes"); }).catch(()=>{}); }
 
 /* ---------- app instalable y sin conexión (solo en https o localhost) ---------- */
 let PROMPT_INST=null;
@@ -773,7 +944,7 @@ function instalarPWA(){
   if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{});
   if(!persistente) toast("Atención: este navegador no permite guardar datos. Exporte antes de cerrar.",6000);
   ir("proyectos"); if(!CFG.usuario) setTimeout(dlgUsuario,300);
-  instalarPWA(); iniciarCentral();
+  instalarPWA(); iniciarCentral(); iniciarOT();
 })();
 </script>
 </body>
